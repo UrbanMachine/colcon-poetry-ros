@@ -10,7 +10,7 @@ from colcon_core.package_identification.python import \
     create_dependency_descriptor
 
 
-class PythonPackageAugmentation(PackageAugmentationExtensionPoint):
+class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
     """Augment Python packages that use Poetry by referencing the pyproject.toml file"""
 
     def __init__(self):
