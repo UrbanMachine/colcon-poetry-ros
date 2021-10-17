@@ -1,7 +1,7 @@
 # colcon-python-poetry
 
 An extension for [colcon-core][colcon-core] that adds support for Python
-packages that use Poetry.
+packages that use [Poetry][poetry].
 
 ## Build Dependencies
 
@@ -23,6 +23,7 @@ that dev dependencies are required for tests. They are pulled from the
 [Poetry's documentation][tool-poetry-dependencies] for details.
 
 
+[poetry]: https://python-poetry.org/
 [colcon-core]: https://github.com/colcon/colcon-core
 [build-system-requires]: https://www.python.org/dev/peps/pep-0518/#build-system-table
 [tool-poetry-dependencies]: https://python-poetry.org/docs/pyproject/#dependencies-and-dev-dependencies
