@@ -43,7 +43,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
             )
             return
 
-        logger.debug(f"Project {desc.path} appears to be a Poetry project")
+        logger.info(f"Project {desc.path} appears to be a Poetry project")
 
         poetry_config = pyproject["tool"]["poetry"]
 
