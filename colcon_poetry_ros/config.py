@@ -39,7 +39,5 @@ class _EnvironmentVariable(Generic[T]):
             )
 
 
-run_depends_include_dev = _EnvironmentVariable("POETRY_RUN_DEPENDS_INCLUDE_DEV", False)
-test_depends_include_dev = _EnvironmentVariable("POETRY_TEST_DEPENDS_INCLUDE_DEV", True)
 run_depends_extras = _EnvironmentVariable("POETRY_RUN_DEPENDS_EXTRAS", [])
-test_depends_extras = _EnvironmentVariable("POETRY_TEST_DEPENDS_EXTRAS", [])
+test_depends_extras = _EnvironmentVariable("POETRY_TEST_DEPENDS_EXTRAS", ["test"])

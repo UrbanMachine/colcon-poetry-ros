@@ -50,16 +50,8 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
         else:
             build_deps = set()
 
-        run_deps = _get_dependencies(
-            desc,
-            include_dev=config.run_depends_include_dev.get(),
-            extras=config.run_depends_extras.get(),
-        )
-        test_deps = _get_dependencies(
-            desc,
-            include_dev=config.test_depends_include_dev.get(),
-            extras=config.test_depends_extras.get(),
-        )
+        run_deps = _get_dependencies(desc, extras=config.run_depends_extras.get())
+        test_deps = _get_dependencies(desc, extras=config.test_depends_extras.get())
 
         desc.dependencies["build_depends"] = set(
             create_dependency_descriptor(dep) for dep in build_deps
@@ -74,12 +66,9 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
 
 def _get_dependencies(
     desc: PackageDescriptor,
-    include_dev: bool,
     extras: List[str],
 ) -> Set[str]:
     command = ["poetry", "export", "--format", "requirements.txt"]
-    if include_dev:
-        command += ["--dev"]
 
     for extra in extras:
         command += ["--extras", extra]

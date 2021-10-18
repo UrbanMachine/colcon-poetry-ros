@@ -30,9 +30,13 @@ license = "Proprietary"
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.26.0"
+pytest = { version = "^6.2.5", optional = true }
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.2.5"
+black = "^21.9b0"
+
+[tool.poetry.extras]
+test = ["pytest"]
 
 [tool.poetry.scripts]
 node_a = "my_package.node_a:main"
@@ -122,29 +126,20 @@ Runtime dependencies are pulled from the `tool.poetry.dependencies` table. See
 [Poetry's documentation][tool-poetry-dependencies] for details. Dependency
 versions are defined by the `poetry.lock` file.
 
-You can include dev dependencies by setting the
-`POETRY_RUN_DEPENDS_INCLUDE_DEV` environment variable to "true". By default,
-this value is false.
-
 You can include extras by setting the
 `POETRY_RUN_DEPENDS_EXTRAS` environment variable. Multiple extras can be
 provided and are separated by commas. By default, no extras are included.
 
 ### Test Dependencies
 
-Poetry currently has no way of defining test dependencies, so it's assumed
-that dev dependencies are required for tests. They are pulled from the
-`tool.poetry.dev-dependencies` table. See
-[Poetry's documentation][tool-poetry-dependencies] for details. Dependency
+Poetry currently has no official way of defining test dependencies, so test
+dependencies are instead expected to be in an extra called "test". Dependency
 versions are defined by the `poetry.lock` file.
 
-You can exclude dev dependencies by setting the
-`POETRY_TEST_DEPENDS_INCLUDE_DEV` environment variable to "false". As
-mentioned above, this value is true by default.
-
-You can include extras by setting the
+You can change which extras are used for test dependencies by setting the
 `POETRY_TEST_DEPENDS_EXTRAS` environment variable. Multiple extras can be
-provided and are separated by commas. By default, no extras are included.
+provided and are separated by commas. As mentioned above, this value is set to
+"test" by default.
 
 [poetry]: https://python-poetry.org/
 [colcon-core]: https://github.com/colcon/colcon-core
