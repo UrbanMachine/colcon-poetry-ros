@@ -1,5 +1,4 @@
 import shutil
-from argparse import ArgumentParser
 from pathlib import Path
 
 import toml
@@ -50,7 +49,10 @@ class PoetryBuildTask(TaskExtensionPoint):
         if completed.returncode:
             logger.error(f"Poetry failed to build the package for '{args.path}'")
             return completed.returncode
-        shutil.move(Path(args.path) / "dist", Path(args.build_base) / "poetry_dist")
+        shutil.move(
+            str(Path(args.path) / "dist"),
+            str(Path(args.build_base) / "poetry_dist")
+        )
 
         # Find the wheel file that Poetry generated
         wheel_dir = Path(args.build_base) / "poetry_dist"
@@ -59,9 +61,15 @@ class PoetryBuildTask(TaskExtensionPoint):
             logger.error(f"Poetry failed to produce a wheel file in '{wheel_dir}'")
         wheel_path = wheels[0]
 
+        # Install Poetry's generated wheel
         completed = await run(
             self.context,
-            ["pip3", "install", str(wheel_path), "--prefix", args.install_base],
+            [
+                "pip3", "install", str(wheel_path),
+                "--prefix", args.install_base,
+                # ROS is in charge of downloading dependencies
+                "--no-deps",
+            ],
             cwd=args.path,
             env=env,
         )
@@ -76,8 +84,8 @@ class PoetryBuildTask(TaskExtensionPoint):
         if poetry_script_dir.is_dir():
             ros_script_dir.mkdir(parents=True, exist_ok=True)
             for script in poetry_script_dir.glob("*"):
-                shutil.copy2(script, ros_script_dir)
-            shutil.rmtree(poetry_script_dir)
+                shutil.copy2(str(script), str(ros_script_dir))
+            shutil.rmtree(str(poetry_script_dir))
         else:
             logger.warning(
                 "Poetry did not install any scripts. Are you missing a "
@@ -159,7 +167,7 @@ class PoetryBuildTask(TaskExtensionPoint):
 
             for source in sources:
                 source_path = pkg.path / Path(source)
-                shutil.copy2(source_path, dest_path)
+                shutil.copy2(str(source_path), str(dest_path))
 
                 resulting_file = dest_path / source_path.name
                 if resulting_file == package_index_path:
