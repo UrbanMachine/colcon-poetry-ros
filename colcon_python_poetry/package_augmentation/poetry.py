@@ -3,10 +3,10 @@ import shutil
 from typing import List, Set
 
 import toml
-from colcon_core.package_augmentation import PackageAugmentationExtensionPoint
+from colcon_core.package_augmentation import PackageAugmentationExtensionPoint, logger
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.plugin_system import satisfies_version
-from colcon_core.package_identification.python import \
+from colcon_core.package_augmentation.python import \
     create_dependency_descriptor
 
 
@@ -50,6 +50,7 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
 
         all_deps = _get_dependencies(desc, include_dev=True)
         no_dev_deps = _get_dependencies(desc, include_dev=False)
+
         # Use dev dependencies as test dependencies
         test_deps = all_deps.difference(no_dev_deps)
 
@@ -104,6 +105,8 @@ def _parse_requirements(input_: str) -> Set[str]:
 
         if line.startswith("#"):
             # Just a comment, ignore it
+            continue
+        elif len(line) == 0:
             continue
 
         dependency += line
