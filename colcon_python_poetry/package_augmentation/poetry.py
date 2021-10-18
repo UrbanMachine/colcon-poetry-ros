@@ -1,7 +1,9 @@
+import os
 import subprocess
 import shutil
 from typing import List, Set
 
+from distutils.util import strtobool
 import toml
 from colcon_core.package_augmentation import PackageAugmentationExtensionPoint, logger
 from colcon_core.package_descriptor import PackageDescriptor
@@ -18,6 +20,20 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
         satisfies_version(
             PackageAugmentationExtensionPoint.EXTENSION_POINT_VERSION,
             "^1.0",
+        )
+
+        self._poetry_run_depends_include_dev = _bool_env_var(
+            "POETRY_RUN_DEPENDS_INCLUDE_DEV", False
+        )
+        self._poetry_test_depends_include_dev = _bool_env_var(
+            "POETRY_TEST_DEPENDS_INCLUDE_DEV", True
+        )
+
+        self._poetry_run_depends_extras = _list_env_var(
+            "POETRY_RUN_DEPENDS_EXTRAS", []
+        )
+        self._poetry_test_depends_extras = _list_env_var(
+            "POETRY_TEST_DEPENDS_EXTRAS", []
         )
 
     def augment_package(
@@ -48,17 +64,22 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
         else:
             build_deps = set()
 
-        all_deps = _get_dependencies(desc, include_dev=True)
-        no_dev_deps = _get_dependencies(desc, include_dev=False)
-
-        # Use dev dependencies as test dependencies
-        test_deps = all_deps.difference(no_dev_deps)
+        run_deps = _get_dependencies(
+            desc,
+            include_dev=self._poetry_run_depends_include_dev,
+            extras=self._poetry_run_depends_extras,
+        )
+        test_deps = _get_dependencies(
+            desc,
+            include_dev=self._poetry_test_depends_include_dev,
+            extras=self._poetry_test_depends_extras,
+        )
 
         desc.dependencies["build_depends"] = set(
             create_dependency_descriptor(dep) for dep in build_deps
         )
         desc.dependencies["run_depends"] = set(
-            create_dependency_descriptor(dep) for dep in no_dev_deps
+            create_dependency_descriptor(dep) for dep in run_deps
         )
         desc.dependencies["test_depends"] = set(
             create_dependency_descriptor(dep) for dep in test_deps
@@ -67,11 +88,15 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
 
 def _get_dependencies(
     desc: PackageDescriptor,
-    include_dev: bool = False,
+    include_dev: bool,
+    extras: List[str],
 ) -> Set[str]:
     command = ["poetry", "export", "--format", "requirements.txt"]
     if include_dev:
         command += ["--dev"]
+
+    for extra in extras:
+        command += ["--extras", extra]
 
     try:
         result = subprocess.run(
@@ -120,3 +145,19 @@ def _parse_requirements(input_: str) -> Set[str]:
             specifications.append(spec)
 
     return set(specifications)
+
+
+def _bool_env_var(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    return default if value is None else strtobool(value)
+
+
+def _list_env_var(name: str, default: List[str]) -> List[str]:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    elif value.strip() == "":
+        return []
+    else:
+        value_list = value.strip().split(",")
+        return [v.strip() for v in value_list]
