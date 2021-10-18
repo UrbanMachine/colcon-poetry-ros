@@ -69,6 +69,12 @@ node_b = "my_package.node_b:main"
 
 ## Defining Dependencies
 
+### Installation
+
+Dependencies are installed using Pip directly, meaning that no automatic
+virtual environment management is done. If you don't want Python packages to
+be installed user-wide, enter a virtual environment before building.
+
 ### A Note on Extras
 
 You may use extras as a way to include dependencies in specific categories.
