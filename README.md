@@ -169,3 +169,12 @@ These entries take care of adding the package index marker and package.xml
 file to the installation.
 
 [setuptools-data-files]: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
+
+## Testing
+
+This extension currently supports projects based on PyTest. Run the following
+command to start tests:
+
+```bash
+colcon test
+```

@@ -25,10 +25,6 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
     def augment_package(
         self, desc: PackageDescriptor, *, additional_argument_names=None
     ):
-        if "uses_poetry" not in desc.metadata:
-            # Only run the augmenter if the Poetry identifier was used
-            return
-
         lock_file = desc.path / "poetry.lock"
         if not lock_file.is_file():
             raise RuntimeError(

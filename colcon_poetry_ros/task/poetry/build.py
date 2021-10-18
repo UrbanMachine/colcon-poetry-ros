@@ -27,10 +27,10 @@ class PoetryBuildTask(TaskExtensionPoint):
         pkg = self.context.pkg
         args = self.context.args
 
-        if pkg.type != "poetry":
+        if pkg.type != "poetry.python":
             logger.error(
                 f"The Poetry build was invoked on the wrong package type! Expected "
-                f"'poetry' but got '{pkg.type}'."
+                f"'poetry.python' but got '{pkg.type}'."
             )
 
         logger.info(f"Building Poetry Python package in '{args.path}'")

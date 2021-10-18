@@ -21,7 +21,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
 
     def identify(self, desc: PackageDescriptor):
         if desc.type is not None and desc.type != "poetry":
-            # Poetry is a Python-only tool
+            # Some other identifier claimed this package
             return
 
         pyproject_toml = desc.path / "pyproject.toml"
@@ -60,6 +60,5 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
                 f"'{name}', but the package name was already set as '{desc.name}'"
             )
 
-        desc.type = "poetry"
+        desc.type = "poetry.python"
         desc.name = poetry_config["name"]
-        desc.metadata["uses_poetry"] = True
