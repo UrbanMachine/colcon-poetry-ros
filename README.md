@@ -1,4 +1,4 @@
-# colcon-python-poetry
+# colcon-poetry-ros
 
 An extension for [colcon-core][colcon-core] that adds support for Python
 packages that use [Poetry][poetry] within ROS. This extension is a replacement
@@ -12,7 +12,7 @@ Testing is done with Foxy, but other versions may work.
 Start by install this extension with pip:
 
 ```bash
-pip3 install git+ssh://git@github.com/UrbanMachine/colcon-python-poetry
+pip3 install git+ssh://git@github.com/UrbanMachine/colcon-poetry-ros
 ```
 
 Then, add a `pyproject.toml` in the root of your package's directory. Each
