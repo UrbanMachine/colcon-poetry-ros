@@ -3,12 +3,14 @@ from pathlib import Path
 
 import toml
 from colcon_core.environment import create_environment_hooks, \
-    create_environment_scripts, get_environment_extensions
+    create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.shell import get_command_environment, create_environment_hook
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task import run
+
+from colcon_poetry_ros import config
 
 
 logger = colcon_logger.getChild(__name__)
@@ -25,7 +27,13 @@ class PoetryBuildTask(TaskExtensionPoint):
         pkg = self.context.pkg
         args = self.context.args
 
-        logger.info(f"Building Python package in '{args.path}'")
+        if pkg.type != "poetry":
+            logger.error(
+                f"The Poetry build was invoked on the wrong package type! Expected "
+                f"'poetry' but got '{pkg.type}'."
+            )
+
+        logger.info(f"Building Poetry Python package in '{args.path}'")
 
         try:
             env = await get_command_environment(
@@ -59,16 +67,22 @@ class PoetryBuildTask(TaskExtensionPoint):
         wheels = list(wheel_dir.glob("*.whl"))
         if len(wheels) == 0:
             logger.error(f"Poetry failed to produce a wheel file in '{wheel_dir}'")
-        wheel_path = wheels[0]
+        wheel_name = str(wheels[0])
+
+        # Include any extras that are needed at runtime. Extras are included by adding
+        # a bracket-surrounded comma-separated list to the end of the package name, like
+        # "colcon-poetry-ros[cool_stuff,other_stuff]"
+        extras = config.run_depends_extras.get()
+        if len(extras) > 0:
+            extras_str = ",".join(extras)
+            extras_str = f"[{extras_str}]"
+            wheel_name += extras_str
 
         # Install Poetry's generated wheel
         completed = await run(
             self.context,
             [
-                "pip3", "install", str(wheel_path),
-                "--prefix", args.install_base,
-                # ROS is in charge of downloading dependencies
-                "--no-deps",
+                "pip3", "install", wheel_name, "--prefix", args.install_base
             ],
             cwd=args.path,
             env=env,

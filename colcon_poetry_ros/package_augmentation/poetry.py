@@ -1,15 +1,15 @@
-import os
 import subprocess
 import shutil
 from typing import List, Set
 
-from distutils.util import strtobool
 import toml
-from colcon_core.package_augmentation import PackageAugmentationExtensionPoint, logger
+from colcon_core.package_augmentation import PackageAugmentationExtensionPoint
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.plugin_system import satisfies_version
 from colcon_core.package_augmentation.python import \
     create_dependency_descriptor
+
+from colcon_poetry_ros import config
 
 
 class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
@@ -20,20 +20,6 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
         satisfies_version(
             PackageAugmentationExtensionPoint.EXTENSION_POINT_VERSION,
             "^1.0",
-        )
-
-        self._poetry_run_depends_include_dev = _bool_env_var(
-            "POETRY_RUN_DEPENDS_INCLUDE_DEV", False
-        )
-        self._poetry_test_depends_include_dev = _bool_env_var(
-            "POETRY_TEST_DEPENDS_INCLUDE_DEV", True
-        )
-
-        self._poetry_run_depends_extras = _list_env_var(
-            "POETRY_RUN_DEPENDS_EXTRAS", []
-        )
-        self._poetry_test_depends_extras = _list_env_var(
-            "POETRY_TEST_DEPENDS_EXTRAS", []
         )
 
     def augment_package(
@@ -66,13 +52,13 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
 
         run_deps = _get_dependencies(
             desc,
-            include_dev=self._poetry_run_depends_include_dev,
-            extras=self._poetry_run_depends_extras,
+            include_dev=config.run_depends_include_dev.get(),
+            extras=config.run_depends_extras.get(),
         )
         test_deps = _get_dependencies(
             desc,
-            include_dev=self._poetry_test_depends_include_dev,
-            extras=self._poetry_test_depends_extras,
+            include_dev=config.test_depends_include_dev.get(),
+            extras=config.test_depends_extras.get(),
         )
 
         desc.dependencies["build_depends"] = set(
@@ -145,19 +131,3 @@ def _parse_requirements(input_: str) -> Set[str]:
             specifications.append(spec)
 
     return set(specifications)
-
-
-def _bool_env_var(name: str, default: bool) -> bool:
-    value = os.environ.get(name)
-    return default if value is None else strtobool(value)
-
-
-def _list_env_var(name: str, default: List[str]) -> List[str]:
-    value = os.environ.get(name)
-    if value is None:
-        return default
-    elif value.strip() == "":
-        return []
-    else:
-        value_list = value.strip().split(",")
-        return [v.strip() for v in value_list]
