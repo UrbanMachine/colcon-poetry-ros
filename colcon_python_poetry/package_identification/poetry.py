@@ -8,6 +8,10 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
     """Identifies Python packages that use Poetry by referencing the pyproject.toml file
     """
 
+    # The priority needs to be higher than RosPackageIdentification and the built-in
+    # Python identification. This identifier supercedes both.
+    PRIORITY = 200
+
     def __init__(self):
         super().__init__()
         satisfies_version(
@@ -16,7 +20,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
         )
 
     def identify(self, desc: PackageDescriptor):
-        if desc.type is not None and desc.type != "python":
+        if desc.type is not None and desc.type != "poetry":
             # Poetry is a Python-only tool
             return
 
@@ -56,6 +60,6 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
                 f"'{name}', but the package name was already set as '{desc.name}'"
             )
 
-        desc.type = "python"
+        desc.type = "poetry"
         desc.name = poetry_config["name"]
         desc.metadata["uses_poetry"] = True
