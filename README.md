@@ -79,38 +79,6 @@ Dependencies are installed using Pip directly, meaning that no automatic
 virtual environment management is done. If you don't want Python packages to
 be installed user-wide, enter a virtual environment before building.
 
-### A Note on Extras
-
-You may use extras as a way to include dependencies in specific categories.
-This will be described in more detail in the next few sections. If you
-decide to use extras, they must be defined in the `tool.poetry.extras`
-section. If you don't, Poetry will not include them in the resulting wheel
-properly.
-
-This works:
-
-```toml
-[tool.poetry.dependencies]
-python = "^3.8"
-pendulum = {version = "^2.1.2", optional = true}
-
-[tool.poetry.extras]
-my_extra = ["pendulum"]
-```
-
-This **will not** work:
-
-```toml
-# This will break!
-[tool.poetry.dependencies]
-python = "^3.8"
-pendulum = {version = "^2.1.2", extras = ["my_extra"]}
-```
-
-See [poetry#4649][poetry-bug] for details.
-
-[poetry-bug]: https://github.com/python-poetry/poetry/issues/4649
-
 ### Build Dependencies
 
 This extension uses the `requires` field in the `build-system` table to source
