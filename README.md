@@ -2,10 +2,13 @@
 
 An extension for [colcon-core][colcon-core] that adds support for Python
 packages that use [Poetry][poetry] within ROS. This extension is a replacement
-for Colcon's built-in `setup.py` based Python support and the Python-related
-bits in `colcon-ros`.
+for Colcon's built-in `setup.cfg` based Python support and the Python-related
+bits in [colcon-ros][colcon-ros].
 
-Testing is done with Foxy, but other versions may work.
+We use this extension with Foxy, but newer versions should work as well.
+Please create an issue if you see problems!
+
+[colcon-ros]: https://github.com/colcon/colcon-ros
 
 ## Getting Started
 
