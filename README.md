@@ -78,10 +78,6 @@ node_b = "my_package.node_b:main"
 
 ### Installation
 
-Dependencies are installed using Pip directly, meaning that no automatic
-virtual environment management is done. If you don't want Python packages to
-be installed user-wide, enter a virtual environment before building.
-
 ### Build Dependencies
 
 This extension uses the `requires` field in the `build-system` table to source
