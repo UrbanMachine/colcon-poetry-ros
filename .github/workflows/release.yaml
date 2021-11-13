@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  pypi:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build
+        run: python3 -m build --sdist --wheel --outdir dist/
+        shell: bash
+      - name: Upload
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          repository_url: https://upload.pypi.org/legacy/
+          password: ${{ secrets.PYPI_API_TOKEN }}
