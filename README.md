@@ -8,6 +8,8 @@ bits in [colcon-ros][colcon-ros].
 We use this extension with Foxy, but newer versions should work as well.
 Please create an issue if you see problems!
 
+[colcon-core]: https://github.com/colcon/colcon-core
+[poetry]: https://python-poetry.org/
 [colcon-ros]: https://github.com/colcon/colcon-ros
 
 ## Getting Started
@@ -15,7 +17,7 @@ Please create an issue if you see problems!
 Start by install this extension with Pip:
 
 ```bash
-pip3 install git+ssh://git@github.com/UrbanMachine/colcon-poetry-ros
+pip3 install colcon-poetry-ros
 ```
 
 Then, add a `pyproject.toml` in the root of your package's directory. Each
@@ -106,8 +108,6 @@ You can change which extras are used for test dependencies by setting the
 provided and are separated by commas. As mentioned above, this value is set to
 "test" by default.
 
-[poetry]: https://python-poetry.org/
-[colcon-core]: https://github.com/colcon/colcon-core
 [build-system-requires]: https://www.python.org/dev/peps/pep-0518/#build-system-table
 [tool-poetry-dependencies]: https://python-poetry.org/docs/pyproject/#dependencies-and-dev-dependencies
 
