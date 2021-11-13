@@ -1,0 +1,17 @@
+name: Release
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  pypi:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/pypi-release
+        name: Release to PyPI
+        with:
+          repository_url: https://upload.pypi.org/legacy/
+          api_token: ${{ secrets.PYPI_API_TOKEN }}
