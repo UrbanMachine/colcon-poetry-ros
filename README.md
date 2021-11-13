@@ -9,7 +9,7 @@ Testing is done with Foxy, but other versions may work.
 
 ## Getting Started
 
-Start by install this extension with pip:
+Start by install this extension with Pip:
 
 ```bash
 pip3 install git+ssh://git@github.com/UrbanMachine/colcon-poetry-ros
@@ -24,8 +24,8 @@ like this:
 name = "my_package"
 version = "0.1.0"
 description = "Does something cool"
-authors = ["Urban Machine <info@urbanmachine.build>"]
-license = "Proprietary"
+authors = ["John Smith <johnny@urbanmachine.build>"]
+license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -118,14 +118,15 @@ provided and are separated by commas. As mentioned above, this value is set to
 
 Poetry has only limited support for including data files in an installation,
 and the current implementation is not flexible enough to be used with ROS.
-Instead, this extension consults a custom section in your pyproject.toml,
+Instead, this extension consults a custom section in your `pyproject.toml`,
 called `tool.colcon-poetry.data-files`.
 
 The format is intended to be identical to the `data_files` field used by
 [setuptools][setuptools-data-files].
 
 All ROS projects must have, at minimum, these entries in the
-`tool.colcon-poetry.data-files` section:
+`tool.colcon-poetry.data-files` section (with `{package_name}` replaced with
+the name of your package):
 
 ```toml
 [tool.colcon-poetry.data-files]
@@ -133,7 +134,7 @@ All ROS projects must have, at minimum, these entries in the
 "share/{package_name}" = ["package.xml"]
 ```
 
-These entries take care of adding the package index marker and package.xml
+These entries take care of adding the package index marker and `package.xml`
 file to the installation.
 
 [setuptools-data-files]: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
