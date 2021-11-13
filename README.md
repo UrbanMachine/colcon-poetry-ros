@@ -76,8 +76,6 @@ node_b = "my_package.node_b:main"
 
 ## Defining Dependencies
 
-### Installation
-
 ### Build Dependencies
 
 This extension uses the `requires` field in the `build-system` table to source
