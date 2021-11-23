@@ -25,6 +25,10 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
     def augment_package(
         self, desc: PackageDescriptor, *, additional_argument_names=None
     ):
+        if desc.type != "poetry":
+            # Some other identifier claimed this package
+            return
+
         lock_file = desc.path / "poetry.lock"
         if not lock_file.is_file():
             raise RuntimeError(
