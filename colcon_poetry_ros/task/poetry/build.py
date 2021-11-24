@@ -57,6 +57,11 @@ class PoetryBuildTask(TaskExtensionPoint):
         if completed.returncode:
             logger.error(f"Poetry failed to build the package for '{args.path}'")
             return completed.returncode
+
+        poetry_dist = Path(args.build_base) / "poetry_dist"
+        if poetry_dist.exists():
+            shutil.rmtree(str(poetry_dist))
+
         shutil.move(
             str(Path(args.path) / "dist"),
             str(Path(args.build_base) / "poetry_dist")
