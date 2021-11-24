@@ -57,16 +57,20 @@ class PoetryBuildTask(TaskExtensionPoint):
         if completed.returncode:
             logger.error(f"Poetry failed to build the package for '{args.path}'")
             return completed.returncode
+
+        poetry_dist = Path(args.build_base) / "poetry_dist"
+        if poetry_dist.exists():
+            shutil.rmtree(str(poetry_dist))
+
         shutil.move(
             str(Path(args.path) / "dist"),
-            str(Path(args.build_base) / "poetry_dist")
+            str(poetry_dist)
         )
 
         # Find the wheel file that Poetry generated
-        wheel_dir = Path(args.build_base) / "poetry_dist"
-        wheels = list(wheel_dir.glob("*.whl"))
+        wheels = list(poetry_dist.glob("*.whl"))
         if len(wheels) == 0:
-            logger.error(f"Poetry failed to produce a wheel file in '{wheel_dir}'")
+            logger.error(f"Poetry failed to produce a wheel file in '{poetry_dist}'")
         wheel_name = str(wheels[0])
 
         # Include any extras that are needed at runtime. Extras are included by adding
