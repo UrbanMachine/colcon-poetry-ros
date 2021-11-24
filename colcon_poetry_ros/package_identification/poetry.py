@@ -29,6 +29,14 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
             # Poetry requires a pyproject.toml to function
             return
 
+        if not (desc.path / "package.xml").is_file():
+            logger.info(
+                f"Ignoring pyproject.toml in {desc.path} because the directory does "
+                f"not have a package.xml file. This suggests that it is not a ROS "
+                f"package."
+            )
+            return
+
         try:
             pyproject = toml.loads(pyproject_toml.read_text())
         except toml.TomlDecodeError as ex:
@@ -43,7 +51,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
             )
             return
 
-        logger.info(f"Project {desc.path} appears to be a Poetry project")
+        logger.info(f"Project {desc.path} appears to be a Poetry ROS project")
 
         poetry_config = pyproject["tool"]["poetry"]
 
