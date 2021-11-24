@@ -97,7 +97,11 @@ class PoetryBuildTask(TaskExtensionPoint):
         ros_script_dir = Path(args.install_base) / "lib" / pkg.name
         if poetry_script_dir.is_dir():
             ros_script_dir.mkdir(parents=True, exist_ok=True)
-            for script in poetry_script_dir.glob("*"):
+
+            script_files = poetry_script_dir.glob("*")
+            script_files = filter(Path.is_dir, script_files)
+
+            for script in script_files:
                 shutil.copy2(str(script), str(ros_script_dir))
             shutil.rmtree(str(poetry_script_dir))
         else:
