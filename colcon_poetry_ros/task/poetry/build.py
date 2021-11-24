@@ -99,7 +99,7 @@ class PoetryBuildTask(TaskExtensionPoint):
             ros_script_dir.mkdir(parents=True, exist_ok=True)
 
             script_files = poetry_script_dir.glob("*")
-            script_files = filter(Path.is_dir, script_files)
+            script_files = filter(Path.is_file, script_files)
 
             for script in script_files:
                 shutil.copy2(str(script), str(ros_script_dir))
