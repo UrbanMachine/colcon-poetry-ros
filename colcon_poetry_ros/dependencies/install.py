@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 import sys
+import os
 from typing import List
 import subprocess
 
@@ -8,18 +9,17 @@ import subprocess
 def main():
     args = _parse_args()
 
+    os.environ["POETRY_VIRTUALENVS_CREATE"] = "false"
+
     for package_dir in _discover_packages(args.from_paths):
         print(f"Installing dependencies for {package_dir.name}...", file=sys.stderr)
         subprocess.run(
             ["poetry", "install", "--no-dev"],
             check=True,
-            env={
-                "POETRY_VIRTUALENVS_CREATE": "false",
-            },
             cwd=package_dir,
         )
 
-    print("\nDependencies installed!")
+    print("\nDependencies installed!", file=sys.stderr)
 
 
 def _discover_packages(from_paths: List[Path]) -> List[Path]:
@@ -42,8 +42,9 @@ def _discover_packages(from_paths: List[Path]) -> List[Path]:
             package_dirs.append(path)
 
     if len(package_dirs) == 0:
+        from_paths_str = ", ".join([str(p) for p in from_paths])
         print(
-            f"No packages were found in the following paths: {from_paths}",
+            f"No packages were found in the following paths: {from_paths_str}",
             file=sys.stderr,
         )
         sys.exit(1)
