@@ -54,7 +54,9 @@ def _discover_packages(from_paths: List[Path]) -> List[Path]:
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Installs Python dependencies via Poetry for a package of ROS nodes"
+        description="Installs Python dependencies via Poetry for a package of ROS "
+        "nodes. Dependencies are not installed in a virtualenv by default, so this "
+        "tool is best used in a container."
     )
 
     parser.add_argument(
