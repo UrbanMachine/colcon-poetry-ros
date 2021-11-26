@@ -86,7 +86,12 @@ class PoetryBuildTask(TaskExtensionPoint):
         completed = await run(
             self.context,
             [
-                "pip3", "install", wheel_name, "--prefix", args.install_base
+                "pip3",
+                "install",
+                "--no-deps",
+                wheel_name,
+                "--prefix",
+                args.install_base,
             ],
             cwd=args.path,
             env=env,
