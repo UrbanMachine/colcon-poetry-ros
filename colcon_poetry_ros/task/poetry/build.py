@@ -23,6 +23,16 @@ class PoetryBuildTask(TaskExtensionPoint):
         super().__init__()
         satisfies_version(TaskExtensionPoint.EXTENSION_POINT_VERSION, '^1.0')
 
+    def add_arguments(self, *, parser):
+        parser.add_argument(
+            "--install-dependencies",
+            action="store_true",
+            help="If provided, dependencies specified in the node's pyproject.toml "
+            "will be installed alongside the node itself. This has the benefit of "
+            "isolating installed dependencies in the ROS 'install' folder, with the "
+            "drawback of longer build times."
+        )
+
     async def build(self, *, additional_hooks=None):
         pkg = self.context.pkg
         args = self.context.args
@@ -83,11 +93,18 @@ class PoetryBuildTask(TaskExtensionPoint):
             wheel_name += extras_str
 
         # Install Poetry's generated wheel
+        pip_install_command = [
+            "pip3",
+            "install",
+            wheel_name,
+            "--prefix",
+            args.install_base,
+        ]
+        if not args.install_dependencies:
+            pip_install_command.append("--no-deps")
         completed = await run(
             self.context,
-            [
-                "pip3", "install", wheel_name, "--prefix", args.install_base
-            ],
+            pip_install_command,
             cwd=args.path,
             env=env,
         )
