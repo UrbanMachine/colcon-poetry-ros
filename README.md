@@ -34,14 +34,6 @@ license = "BSD-3-Clause"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-requests = "^2.26.0"
-pytest = { version = "^6.2.5", optional = true }
-
-[tool.poetry.dev-dependencies]
-black = "^21.9b0"
-
-[tool.poetry.extras]
-test = ["pytest"]
 
 [tool.poetry.scripts]
 node_a = "my_package.node_a:main"
@@ -62,6 +54,15 @@ Finally, run your build like normal:
 colcon build
 ```
 
+## Testing
+
+This extension currently supports projects based on PyTest. Run the following
+command to start tests:
+
+```bash
+colcon test
+```
+
 ## Node Entrypoints
 
 If you want to be able to run your nodes using `ros2 run`, add your node's
@@ -75,41 +76,6 @@ node_b = "my_package.node_b:main"
 ```
 
 [poetry-scripts]: https://python-poetry.org/docs/pyproject/#scripts
-
-## Defining Dependencies
-
-### Build Dependencies
-
-This extension uses the `requires` field in the `build-system` table to source
-build dependencies. See [the section in PEP 518][build-system-requires] for
-details. This section may only be necessary if you're using a compiler like
-Cython that runs during package installation. Since these packages are not
-locked by Poetry, the version specifications in the `requires` field will be
-passed to ROS as-is.
-
-### Runtime Dependencies
-
-Runtime dependencies are pulled from the `tool.poetry.dependencies` table. See
-[Poetry's documentation][tool-poetry-dependencies] for details. Dependency
-versions are defined by the `poetry.lock` file.
-
-You can include extras by setting the
-`POETRY_RUN_DEPENDS_EXTRAS` environment variable. Multiple extras can be
-provided and are separated by commas. By default, no extras are included.
-
-### Test Dependencies
-
-Poetry currently has no official way of defining test dependencies, so test
-dependencies are instead expected to be in an extra called "test". Dependency
-versions are defined by the `poetry.lock` file.
-
-You can change which extras are used for test dependencies by setting the
-`POETRY_TEST_DEPENDS_EXTRAS` environment variable. Multiple extras can be
-provided and are separated by commas. As mentioned above, this value is set to
-"test" by default.
-
-[build-system-requires]: https://www.python.org/dev/peps/pep-0518/#build-system-table
-[tool-poetry-dependencies]: https://python-poetry.org/docs/pyproject/#dependencies-and-dev-dependencies
 
 ## Data Files
 
@@ -136,11 +102,61 @@ file to the installation.
 
 [setuptools-data-files]: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 
-## Testing
+## Installing Dependencies
 
-This extension currently supports projects based on PyTest. Run the following
-command to start tests:
+By default, Poetry dependencies are not installed while ROS nodes are built.
+You can install dependencies during the build process with the following
+command:
 
 ```bash
-colcon test
+colcon build --install-dependencies
 ```
+
+However, this may make development workflows that use containerization slower,
+since your node's dependencies will be re-installed every time code is changed.
+For containerized environments, it may make more sense to use an included
+script to install Poetry dependencies globally before building:
+
+```bash
+python3 -m colcon_poetry_ros.dependencies.install --from-paths <path to your nodes>
+```
+
+## Communicating Dependencies to Colcon
+
+Colcon expects extensions to report their dependencies as dependency
+descriptors so that they can be shown in tools like `colcon graph`. The
+following sections describe how each dependency type is sourced from your
+`pyproject.toml`.
+
+### Build Dependencies
+
+This extension uses the `requires` field in the `build-system` table to source
+build dependencies. See [the section in PEP 518][build-system-requires] for
+details. This section may only be used if you're using a compiler like
+Cython that runs during package installation. Since these packages are not
+locked by Poetry, the version specifications in the `requires` field will be
+used as-is.
+
+### Runtime Dependencies
+
+Runtime dependencies are pulled from the `tool.poetry.dependencies` table. See
+[Poetry's documentation][tool-poetry-dependencies] for details. Dependency
+versions are defined by the `poetry.lock` file.
+
+You can include extras by setting the
+`POETRY_RUN_DEPENDS_EXTRAS` environment variable. Multiple extras can be
+provided and are separated by commas. By default, no extras are included.
+
+### Test Dependencies
+
+Poetry currently has no official way of defining test dependencies, so test
+dependencies are instead expected to be in an extra called "test". Dependency
+versions are defined by the `poetry.lock` file.
+
+You can change which extras are used for test dependencies by setting the
+`POETRY_TEST_DEPENDS_EXTRAS` environment variable. Multiple extras can be
+provided and are separated by commas. As mentioned above, this value is set to
+"test" by default.
+
+[build-system-requires]: https://www.python.org/dev/peps/pep-0518/#build-system-table
+[tool-poetry-dependencies]: https://python-poetry.org/docs/pyproject/#dependencies-and-dev-dependencies
