@@ -6,7 +6,7 @@ from typing import List, Set
 import toml
 
 
-class NotAROSPoetryProjectError(Exception):
+class NotAPoetryROSPackage(Exception):
     """The given directory does not point to a ROS Poetry project"""
 
 
@@ -23,7 +23,7 @@ class PoetryROSPackage:
         self.pyproject_file = path / "pyproject.toml"
         if not self.pyproject_file.is_file():
             # Poetry requires a pyproject.toml to function
-            raise NotAROSPoetryProjectError()
+            raise NotAPoetryROSPackage()
 
         if not (path / "package.xml").is_file():
             logger.info(
@@ -31,7 +31,7 @@ class PoetryROSPackage:
                 f"not have a package.xml file. This suggests that it is not a ROS "
                 f"package."
             )
-            raise NotAROSPoetryProjectError()
+            raise NotAPoetryROSPackage()
 
         try:
             self.pyproject = toml.loads(self.pyproject_file.read_text())
@@ -46,7 +46,7 @@ class PoetryROSPackage:
                 f"section. The file is likely there to instruct a tool other than "
                 f"Poetry."
             )
-            raise NotAROSPoetryProjectError()
+            raise NotAPoetryROSPackage()
 
         logger.info(f"Project {path} appears to be a Poetry ROS project")
 

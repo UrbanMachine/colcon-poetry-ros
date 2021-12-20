@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile
 
 from colcon_poetry_ros.package_identification.poetry import (
     PoetryROSPackage,
-    NotAROSPoetryProjectError,
+    NotAPoetryROSPackage,
 )
 
 
@@ -68,7 +68,7 @@ def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
         if path.is_dir():
             try:
                 project = PoetryROSPackage(path)
-            except NotAROSPoetryProjectError:
+            except NotAPoetryROSPackage:
                 continue
             else:
                 projects.append(project)
