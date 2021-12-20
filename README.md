@@ -132,7 +132,7 @@ following sections describe how each dependency type is sourced from your
 
 This extension uses the `requires` field in the `build-system` table to source
 build dependencies. See [the section in PEP 518][build-system-requires] for
-details. This section may only be used if you're using a compiler like
+details. This section might only be needed if you're using a compiler like
 Cython that runs during package installation. Since these packages are not
 locked by Poetry, the version specifications in the `requires` field will be
 used as-is.
