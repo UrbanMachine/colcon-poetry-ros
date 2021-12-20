@@ -28,38 +28,31 @@ def main():
             if not args.merge_install:
                 install_base /= project.name
 
-            try:
-                subprocess.run(
-                    [
-                        "python3",
-                        "-m",
-                        "pip",
-                        "install",
-                        # I don't understand why, but providing this fixes:
-                        # https://github.com/pypa/pip/issues/9644
-                        # Despite what the name would imply, dependencies are still
-                        # installed
-                        "--no-deps",
-                        # Forces installation even if the package is installed at the
-                        # system level
-                        "--ignore-installed",
-                        # Turns off Pip's check to ensure installed binaries are in the
-                        # PATH. ROS workspaces take care of setting the PATH, but Pip
-                        # doesn't know that.
-                        "--no-warn-script-location",
-                        "--requirement",
-                        requirements_file.name,
-                        "--prefix",
-                        install_base,
-                    ],
-                    check=True,
-                )
-            except subprocess.SubprocessError:
-                logging.error(
-                    f"Dependency installation failed for the following "
-                    f"requirements.txt file:\n{requirements_data}"
-                )
-                raise
+            subprocess.run(
+                [
+                    "python3",
+                    "-m",
+                    "pip",
+                    "install",
+                    # I don't understand why, but providing this fixes:
+                    # https://github.com/pypa/pip/issues/9644
+                    # Despite what the name would imply, dependencies are still
+                    # installed
+                    "--no-deps",
+                    # Forces installation even if the package is installed at the
+                    # system level
+                    "--ignore-installed",
+                    # Turns off Pip's check to ensure installed binaries are in the
+                    # PATH. ROS workspaces take care of setting the PATH, but Pip
+                    # doesn't know that.
+                    "--no-warn-script-location",
+                    "--requirement",
+                    requirements_file.name,
+                    "--prefix",
+                    install_base,
+                ],
+                check=True,
+            )
 
     logging.info("\nDependencies installed!")
 
