@@ -39,7 +39,7 @@ python = "^3.8"
 node_a = "my_package.node_a:main"
 node_b = "my_package.node_b:main"
 
-[tool.colcon-poetry.data-files]
+[tool.colcon-poetry-ros.data-files]
 "share/ament_index/resource_index/packages" = ["resource/my_package"]
 "share/my_package" = ["package.xml"]
 
@@ -82,17 +82,17 @@ node_b = "my_package.node_b:main"
 Poetry has only limited support for including data files in an installation,
 and the current implementation is not flexible enough to be used with ROS.
 Instead, this extension consults a custom section in your `pyproject.toml`,
-called `tool.colcon-poetry.data-files`.
+called `tool.colcon-poetry-ros.data-files`.
 
 The format is intended to be identical to the `data_files` field used by
 [setuptools][setuptools-data-files].
 
 All ROS projects must have, at minimum, these entries in the
-`tool.colcon-poetry.data-files` section (with `{package_name}` replaced with
-the name of your package):
+`tool.colcon-poetry-ros.data-files` section (with `{package_name}` replaced
+with the name of your package):
 
 ```toml
-[tool.colcon-poetry.data-files]
+[tool.colcon-poetry-ros.data-files]
 "share/ament_index/resource_index/packages" = ["resource/{package_name}"]
 "share/{package_name}" = ["package.xml"]
 ```

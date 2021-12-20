@@ -152,7 +152,7 @@ class PoetryBuildTask(TaskExtensionPoint):
         )
 
     async def _add_data_files(self) -> int:
-        """Installs data files based on the [tool.colcon-poetry.data-files] table.
+        """Installs data files based on the [tool.colcon-poetry-ros.data-files] table.
         Poetry's support for data files is fairly incomplete at the time of writing, so
         we need to do this ourselves.
 
@@ -165,7 +165,7 @@ class PoetryBuildTask(TaskExtensionPoint):
         pyproject = toml.loads(pyproject_toml.read_text())
 
         try:
-            data_files = pyproject["tool"]["colcon-poetry"]["data-files"]
+            data_files = pyproject["tool"]["colcon-poetry-ros"]["data-files"]
         except KeyError:
             logger.warning(
                 f"File {pyproject_toml} does not define any data files, so none will "
@@ -231,4 +231,4 @@ class PoetryBuildTask(TaskExtensionPoint):
         return 0
 
 
-_DATA_FILES_TABLE = "[tool.colcon-poetry.data-files]"
+_DATA_FILES_TABLE = "[tool.colcon-poetry-ros.data-files]"
