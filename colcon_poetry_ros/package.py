@@ -10,7 +10,7 @@ class NotAROSPoetryProjectError(Exception):
     """The given directory does not point to a ROS Poetry project"""
 
 
-class ROSPoetryProject:
+class ROSPoetryPackage:
     """Contains information on a ROS package defined with Poetry"""
 
     def __init__(self, path: Path, logger: logging.Logger = logging):
