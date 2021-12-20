@@ -8,7 +8,7 @@ from colcon_core.package_augmentation.python import \
     create_dependency_descriptor, logger
 
 from colcon_poetry_ros import config
-from colcon_poetry_ros.package_identification.poetry import ROSPoetryPackage
+from colcon_poetry_ros.package_identification.poetry import PoetryROSPackage
 
 
 class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
@@ -28,7 +28,7 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
             # Some other identifier claimed this package
             return
 
-        project = ROSPoetryPackage(desc.path, logger)
+        project = PoetryROSPackage(desc.path, logger)
         project.check_lock_file_exists()
 
         if not shutil.which("poetry"):

@@ -7,7 +7,7 @@ import logging
 from tempfile import NamedTemporaryFile
 
 from colcon_poetry_ros.package_identification.poetry import (
-    ROSPoetryPackage,
+    PoetryROSPackage,
     NotAROSPoetryProjectError,
 )
 
@@ -57,8 +57,8 @@ def main():
     logging.info("\nDependencies installed!")
 
 
-def _discover_packages(base_paths: List[Path]) -> List[ROSPoetryPackage]:
-    projects: List[ROSPoetryPackage] = []
+def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
+    projects: List[PoetryROSPackage] = []
 
     potential_packages = []
     for path in base_paths:
@@ -67,7 +67,7 @@ def _discover_packages(base_paths: List[Path]) -> List[ROSPoetryPackage]:
     for path in potential_packages:
         if path.is_dir():
             try:
-                project = ROSPoetryPackage(path)
+                project = PoetryROSPackage(path)
             except NotAROSPoetryProjectError:
                 continue
             else:
