@@ -104,22 +104,19 @@ file to the installation.
 
 ## Installing Dependencies
 
-By default, Poetry dependencies are not installed while ROS nodes are built.
-You can install dependencies during the build process with the following
-command:
+Poetry dependencies are not installed as part of the node build process, but
+they can be installed using a separate tool that's included in this package.
 
 ```bash
-colcon build --install-dependencies
+python3 -m colcon_poetry_ros.dependencies.install --base-paths <path to your nodes>
 ```
 
-However, this may make development workflows that use containerization slower,
-since your node's dependencies will be re-installed every time code is changed.
-For containerized environments, it may make more sense to use an included
-script to install Poetry dependencies globally before building:
+This command installs each node's dependencies to Colcon's base install
+directory. This means that your dependencies live alongside your node's code
+after it's built, isolated from the rest of your system.
 
-```bash
-python3 -m colcon_poetry_ros.dependencies.install --from-paths <path to your nodes>
-```
+If you customize `colcon build` with the `--install-base` or `--merge-install`
+flags, make sure to provide those to this tool as well.
 
 ## Communicating Dependencies to Colcon
 

@@ -1,7 +1,8 @@
-import toml
 from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification import PackageIdentificationExtensionPoint, logger
 from colcon_core.plugin_system import satisfies_version
+
+from colcon_poetry_ros.package import PoetryROSPackage, NotAPoetryROSPackage
 
 
 class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
@@ -24,49 +25,17 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
             # Some other identifier claimed this package
             return
 
-        pyproject_toml = desc.path / "pyproject.toml"
-        if not pyproject_toml.is_file():
-            # Poetry requires a pyproject.toml to function
-            return
-
-        if not (desc.path / "package.xml").is_file():
-            logger.info(
-                f"Ignoring pyproject.toml in {desc.path} because the directory does "
-                f"not have a package.xml file. This suggests that it is not a ROS "
-                f"package."
-            )
-            return
-
         try:
-            pyproject = toml.loads(pyproject_toml.read_text())
-        except toml.TomlDecodeError as ex:
-            raise RuntimeError(
-                f"Failed to parse {pyproject_toml} as a TOML file: {ex}"
-            )
-
-        if "tool" not in pyproject or "poetry" not in pyproject["tool"]:
-            logger.debug(
-                f"The {pyproject_toml} file does not have a [tool.poetry] section. "
-                f"The file is likely there to instruct a tool other than Poetry."
-            )
+            project = PoetryROSPackage(desc.path, logger)
+        except NotAPoetryROSPackage:
             return
 
-        logger.info(f"Project {desc.path} appears to be a Poetry ROS project")
-
-        poetry_config = pyproject["tool"]["poetry"]
-
-        if "name" not in poetry_config:
+        if desc.name is not None and desc.name != project.name:
             raise RuntimeError(
-                f"Failed to determine Python package name in {desc.path}: The "
-                f"[tool.poetry] section must have a 'name' field"
-            )
-
-        name = poetry_config["name"]
-        if desc.name is not None and desc.name != name:
-            raise RuntimeError(
-                f"The {pyproject_toml} file indicates that the package name is "
-                f"'{name}', but the package name was already set as '{desc.name}'"
+                f"The {project.pyproject_file} file indicates that the package name is "
+                f"'{project.name}', but the package name was already set as "
+                f"'{desc.name}'"
             )
 
         desc.type = "poetry.python"
-        desc.name = poetry_config["name"]
+        desc.name = project.name

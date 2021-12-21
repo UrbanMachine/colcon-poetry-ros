@@ -1,71 +1,121 @@
 import argparse
 from pathlib import Path
 import sys
-import os
 from typing import List
 import subprocess
+import logging
+from tempfile import NamedTemporaryFile
+
+from colcon_poetry_ros.package_identification.poetry import (
+    PoetryROSPackage,
+    NotAPoetryROSPackage,
+)
 
 
 def main():
     args = _parse_args()
+    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
 
-    os.environ["POETRY_VIRTUALENVS_CREATE"] = "false"
+    for project in _discover_packages(args.base_paths):
+        logging.info(f"Installing dependencies for {project.path.name}...")
 
-    for package_dir in _discover_packages(args.from_paths):
-        print(f"Installing dependencies for {package_dir.name}...", file=sys.stderr)
-        subprocess.run(
-            ["poetry", "install", "--no-dev"],
-            check=True,
-            cwd=package_dir,
-        )
+        with NamedTemporaryFile("w") as requirements_file:
+            requirements_data = project.get_requirements_txt([])
+            requirements_file.write(requirements_data)
+            requirements_file.flush()
 
-    print("\nDependencies installed!", file=sys.stderr)
+            install_base = args.install_base
+            if not args.merge_install:
+                install_base /= project.name
+
+            subprocess.run(
+                [
+                    "python3",
+                    "-m",
+                    "pip",
+                    "install",
+                    # I don't understand why, but providing this fixes:
+                    # https://github.com/pypa/pip/issues/9644
+                    # Despite what the name would imply, dependencies are still
+                    # installed
+                    "--no-deps",
+                    # Forces installation even if the package is installed at the
+                    # system level
+                    "--ignore-installed",
+                    # Turns off Pip's check to ensure installed binaries are in the
+                    # PATH. ROS workspaces take care of setting the PATH, but Pip
+                    # doesn't know that.
+                    "--no-warn-script-location",
+                    "--requirement",
+                    requirements_file.name,
+                    "--prefix",
+                    install_base,
+                ],
+                check=True,
+            )
+
+    logging.info("\nDependencies installed!")
 
 
-def _discover_packages(from_paths: List[Path]) -> List[Path]:
-    package_dirs: List[Path] = []
+def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
+    projects: List[PoetryROSPackage] = []
 
     potential_packages = []
-    for path in from_paths:
+    for path in base_paths:
         potential_packages += list(path.glob("*"))
 
     for path in potential_packages:
-        if path.is_dir() and (path / "pyproject.toml").is_file():
-            if not (path / "poetry.lock").is_file():
-                print(
-                    f"Package {path.name} is missing a poetry.lock file. Have you run "
-                    f"'poetry.lock'?",
-                    file=sys.stderr,
-                )
-                sys.exit(1)
+        if path.is_dir():
+            try:
+                project = PoetryROSPackage(path)
+            except NotAPoetryROSPackage:
+                continue
+            else:
+                projects.append(project)
 
-            package_dirs.append(path)
-
-    if len(package_dirs) == 0:
-        from_paths_str = ", ".join([str(p) for p in from_paths])
-        print(
-            f"No packages were found in the following paths: {from_paths_str}",
-            file=sys.stderr,
+    if len(projects) == 0:
+        base_paths_str = ", ".join([str(p) for p in base_paths])
+        logging.error(
+            f"No packages were found in the following paths: {base_paths_str}"
         )
         sys.exit(1)
 
-    return package_dirs
+    return projects
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Installs Python dependencies via Poetry for a package of ROS "
-        "nodes. Dependencies are not installed in a virtualenv by default, so this "
-        "tool is best used in a container."
+        description="Searches for ROS Poetry packages and installs their dependencies "
+        "to a configurable install base"
     )
 
     parser.add_argument(
-        "--from-paths",
+        "--base-paths",
         nargs="+",
         type=Path,
         default=[Path.cwd()],
-        help="The path to start looking for Poetry projects in. Defaults to the "
+        help="The paths to start looking for Poetry projects in. Defaults to the "
         "current directory."
+    )
+
+    parser.add_argument(
+        "--install-base",
+        type=Path,
+        default=Path("install"),
+        help="The base path for all install prefixes (default: install)",
+    )
+
+    parser.add_argument(
+        "--merge-install",
+        action="store_true",
+        help="Merge all install prefixes into a single location",
+    )
+
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="If provided, debug logs will be printed",
     )
 
     return parser.parse_args()
