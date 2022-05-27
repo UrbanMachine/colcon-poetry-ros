@@ -199,7 +199,7 @@ class PoetryBuildTask(TaskExtensionPoint):
             for source in sources:
                 source_path = pkg.path / Path(source)
                 if source_path.is_dir():
-                    shutil.copytree(str(source_path), str(dest_path))
+                    shutil.copytree(str(source_path), str(dest_path / source_path.name))
                 else:
                     shutil.copy2(str(source_path), str(dest_path))
 
