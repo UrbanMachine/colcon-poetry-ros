@@ -84,8 +84,9 @@ and the current implementation is not flexible enough to be used with ROS.
 Instead, this extension consults a custom section in your `pyproject.toml`,
 called `tool.colcon-poetry-ros.data-files`.
 
-The format is intended to be identical to the `data_files` field used by
-[setuptools][setuptools-data-files].
+The format is intended to be mostly identical to the `data_files` field used
+by [setuptools][setuptools-data-files]. The main differences are that copying
+entire directories is supported, and globbing is not yet implemented.
 
 All ROS projects must have, at minimum, these entries in the
 `tool.colcon-poetry-ros.data-files` section (with `{package_name}` replaced
