@@ -5,8 +5,8 @@ packages that use [Poetry][poetry] within ROS. This extension is a replacement
 for Colcon's built-in `setup.cfg` based Python support and the Python-related
 bits in [colcon-ros][colcon-ros].
 
-We use this extension with Foxy, but newer versions should work as well.
-Please create an issue if you see problems!
+We use this extension with Foxy and Humble, but other versions should work as
+well. Please create an issue if you see problems!
 
 [colcon-core]: https://github.com/colcon/colcon-core
 [poetry]: https://python-poetry.org/
