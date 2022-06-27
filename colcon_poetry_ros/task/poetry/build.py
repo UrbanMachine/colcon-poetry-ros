@@ -107,6 +107,9 @@ class PoetryBuildTask(TaskExtensionPoint):
         # Poetry installs scripts to {prefix}/bin, but ROS wants them at
         # {prefix}/lib/{package_name}
         poetry_script_dir = Path(args.install_base) / "bin"
+        if not poetry_script_dir.exists():
+            logger.info(f"Attempting to use .../local/bin instead for poetry_script_dir")
+            poetry_script_dir = Path(args.install_base) / "local" / "bin"
         ros_script_dir = Path(args.install_base) / "lib" / pkg.name
         if poetry_script_dir.is_dir():
             ros_script_dir.mkdir(parents=True, exist_ok=True)
