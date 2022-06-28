@@ -79,7 +79,7 @@ class PoetryROSPackage:
         :param extras: Names of extras whose dependencies should be included
         :return: The requirements.txt text
         """
-        command = ["poetry", "export", "--format", "requirements.txt"]
+        command = ["poetry", "export", "--without-hashes", "--format", "requirements.txt"]
 
         for extra in extras:
             command += ["--extras", extra]
