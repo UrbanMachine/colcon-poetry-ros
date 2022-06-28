@@ -6,6 +6,7 @@ from colcon_core.environment import create_environment_hooks, \
     create_environment_scripts
 from colcon_core.logging import colcon_logger
 from colcon_core.plugin_system import satisfies_version
+from colcon_core.python_install_path import get_python_install_path
 from colcon_core.shell import get_command_environment, create_environment_hook
 from colcon_core.task import TaskExtensionPoint
 from colcon_core.task import run
@@ -106,6 +107,23 @@ class PoetryBuildTask(TaskExtensionPoint):
 
         # Poetry installs scripts to {prefix}/bin, but ROS wants them at
         # {prefix}/lib/{package_name}
+        # Check for "local" prefix in install, PIP will use this sometimes
+        base_path = Path(args.install_base)
+        logger.warning
+        if (base_path / "local").exists():
+            logger.warning(f"Found 'local' directory under {base_path}, squashing...")
+            shutil.copytree(str(base_path / "local"), str(base_path), dirs_exist_ok=True)
+            shutil.rmtree(str(base_path / "local"))
+
+        expected_install_path = get_python_install_path('purelib', {'base': base_path})
+        if expected_install_path.name == "site-packages":
+            # Check for dist-packages vs site-packages (https://lists.ubuntu.com/archives/ubuntu-devel/2009-February/027439.html)
+            for distdir in base_path.rglob("dist-packages"):
+                destdir = Path(expected_install_path).resolve()
+                logger.info(f"Found 'dist-packages' directory under {distdir}, moving to {destdir} (expected under debian)...")
+                shutil.copytree(str(distdir.resolve()), str(destdir.resolve()), dirs_exist_ok=True)
+                shutil.rmtree(str(distdir.resolve()))
+
         poetry_script_dir = Path(args.install_base) / "bin"
         if not poetry_script_dir.exists():
             logger.info(f"Attempting to use .../local/bin instead for poetry_script_dir")
