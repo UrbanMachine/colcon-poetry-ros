@@ -89,6 +89,10 @@ class PoetryBuildTask(TaskExtensionPoint):
                 "pip3",
                 "install",
                 wheel_name,
+                # pip will skip installation if the package version is the same
+                # but we want the installed version to always reflect the source
+                # regardless of the package version
+                "--force-reinstall",
                 # Turns off Pip's check to ensure installed binaries are in the
                 # PATH. ROS workspaces take care of setting the PATH, but Pip
                 # doesn't know that.
