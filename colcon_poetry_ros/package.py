@@ -80,20 +80,20 @@ class PoetryROSPackage:
         :param extras: Names of extras whose dependencies should be included
         :return: The requirements.txt text
         """
+        command = [
+            "poetry",
+            "export",
+            "--format",
+            "requirements.txt",
+        ]
+
+        for extra in extras:
+            command += ["--extras", extra]
+
         # Create a temporary file for `poetry export` to write its output to. We can't
         # just capture stdout because Poetry 1.2 uses stdout for logging, too.
         with NamedTemporaryFile("r") as requirements_file:
-            command = [
-                "poetry",
-                "export",
-                "--format",
-                "requirements.txt",
-                "--output",
-                requirements_file.name,
-            ]
-
-            for extra in extras:
-                command += ["--extras", extra]
+            command += ["--output", requirements_file.name]
 
             try:
                 subprocess.run(
