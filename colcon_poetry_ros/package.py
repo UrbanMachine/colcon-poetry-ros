@@ -1,6 +1,7 @@
 import subprocess
 from pathlib import Path
 import logging
+from tempfile import NamedTemporaryFile
 from typing import List, Set
 
 import toml
@@ -79,26 +80,35 @@ class PoetryROSPackage:
         :param extras: Names of extras whose dependencies should be included
         :return: The requirements.txt text
         """
-        command = ["poetry", "export", "--format", "requirements.txt"]
+        command = [
+            "poetry",
+            "export",
+            "--format",
+            "requirements.txt",
+        ]
 
         for extra in extras:
             command += ["--extras", extra]
 
-        try:
-            result = subprocess.run(
-                command,
-                cwd=self.path,
-                stdout=subprocess.PIPE,
-                check=True,
-                encoding="utf-8",
-            )
-        except subprocess.CalledProcessError as ex:
-            raise RuntimeError(
-                f"Failed to export Poetry dependencies in the requirements.txt format: "
-                f"{ex}"
-            )
+        # Create a temporary file for `poetry export` to write its output to. We can't
+        # just capture stdout because Poetry 1.2 uses stdout for logging, too.
+        with NamedTemporaryFile("r") as requirements_file:
+            command += ["--output", requirements_file.name]
 
-        return result.stdout
+            try:
+                subprocess.run(
+                    command,
+                    cwd=self.path,
+                    check=True,
+                    encoding="utf-8",
+                )
+            except subprocess.CalledProcessError as ex:
+                raise RuntimeError(
+                    f"Failed to export Poetry dependencies in the requirements.txt "
+                    f"format: {ex}"
+                )
+
+            return requirements_file.read()
 
     def get_dependencies(self, extras: List[str]) -> Set[str]:
         """Gets dependencies for a Poetry project.
