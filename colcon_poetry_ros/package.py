@@ -82,7 +82,7 @@ class PoetryROSPackage:
         """
         # Create a temporary file for `poetry export` to write its output to. We can't
         # just capture stdout because Poetry 1.2 uses stdout for logging, too.
-        with NamedTemporaryFile() as requirements_file:
+        with NamedTemporaryFile("r") as requirements_file:
             command = [
                 "poetry",
                 "export",
