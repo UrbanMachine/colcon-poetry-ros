@@ -76,8 +76,9 @@ def _install_dependencies_via_poetry_bundle(
         install_base /= project.name
 
     subprocess.run(
-        ["poetry", "bundle", "venv", str(install_base)],
-        check=True
+        ["poetry", "bundle", "venv", str(install_base.absolute())],
+        check=True,
+        cwd=project.path
     )
 
 
