@@ -63,7 +63,12 @@ def _install_dependencies_via_poetry_bundle(
     project: PoetryROSPackage, install_base: Path, merge_install: bool
 ) -> None:
     try:
-        subprocess.run(["poetry", "bundle", "venv", "--help"], check=True)
+        subprocess.run(
+            ["poetry", "bundle", "venv", "--help"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
     except subprocess.CalledProcessError as ex:
         logging.error(
             "The Poetry bundle plugin does not appear to be installed! See the "
