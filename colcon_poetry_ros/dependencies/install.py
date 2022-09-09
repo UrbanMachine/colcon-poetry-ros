@@ -66,8 +66,9 @@ def _install_dependencies_via_poetry_bundle(
         subprocess.run(["poetry", "bundle", "venv", "--help"], check=True)
     except subprocess.CalledProcessError as ex:
         logging.error(
-            f"The Poetry bundle plugin does not appear to be installed! Original "
-            f"error: {ex}"
+            "The Poetry bundle plugin does not appear to be installed! See the "
+            "project page for installation instructions: "
+            "https://github.com/python-poetry/poetry-plugin-bundle"
         )
         sys.exit(1)
 
@@ -75,7 +76,7 @@ def _install_dependencies_via_poetry_bundle(
         install_base /= project.name
 
     subprocess.run(
-        ["poetry", "bundle", "venv", install_base],
+        ["poetry", "bundle", "venv", str(install_base)],
         check=True
     )
 
