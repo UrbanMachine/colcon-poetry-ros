@@ -116,38 +116,25 @@ class PoetryROSPackage:
         :param extras: Names of extras whose dependencies should be included
         :return: A list of dependencies in PEP440 format
         """
-        requirements_txt = self.get_requirements_txt(extras)
-        return _parse_requirements_txt(requirements_txt)
+        try:
+            result = subprocess.run(
+                ["poetry", "show", "--no-interaction"],
+                cwd=self.path,
+                check=True,
+                stdout=subprocess.PIPE,
+                encoding="utf-8",
+            )
+        except subprocess.CalledProcessError as ex:
+            raise RuntimeError(f"Failed to read package dependencies: {ex}")
 
+        dependencies = set()
 
-def _parse_requirements_txt(input_: str) -> Set[str]:
-    """Parses Python dependencies in the requirements.txt format.
+        for dependency_str in result.stdout.splitlines():
+            components = dependency_str.split()
+            if len(components) < 2:
+                raise RuntimeError(f"Invalid dependency format: {dependency_str}")
 
-    :param input_: The text in the requirements.txt
-    :return: A list of dependencies in PEP440 format
-    """
-    specifications: List[str] = []
-    dependency = ""
+            name, version = components
+            dependencies.add(f"{name}=={version}")
 
-    for line in input_.split("\n"):
-        # Whitespace around definitions is never semantically significant
-        line = line.strip()
-
-        if line.startswith("#"):
-            # Just a comment, ignore it
-            continue
-        elif len(line) == 0:
-            continue
-
-        dependency += line
-        if line.endswith("\\"):
-            # Line continuation! The dependency definition continues
-            dependency += line[:-1]
-        else:
-            # The dependency definition is complete. Remove any environment
-            # markers, leaving only the specification.
-            spec = dependency.split(";")[0]
-            specifications.append(spec)
-
-    return set(specifications)
-
+        return dependencies
