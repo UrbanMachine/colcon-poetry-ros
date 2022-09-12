@@ -2,7 +2,7 @@ from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification import PackageIdentificationExtensionPoint, logger
 from colcon_core.plugin_system import satisfies_version
 
-from colcon_poetry_ros.package import PoetryROSPackage, NotAPoetryROSPackage
+from colcon_poetry_ros.package import PoetryPackage, NotAPoetryPackage
 
 
 class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
@@ -26,8 +26,8 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
             return
 
         try:
-            project = PoetryROSPackage(desc.path, logger)
-        except NotAPoetryROSPackage:
+            project = PoetryPackage(desc.path, logger)
+        except NotAPoetryPackage:
             return
 
         if desc.name is not None and desc.name != project.name:

@@ -7,12 +7,12 @@ from typing import List, Set
 import toml
 
 
-class NotAPoetryROSPackage(Exception):
-    """The given directory does not point to a ROS Poetry project"""
+class NotAPoetryPackage(Exception):
+    """The given directory does not point to a Poetry project"""
 
 
-class PoetryROSPackage:
-    """Contains information on a ROS package defined with Poetry"""
+class PoetryPackage:
+    """Contains information on a package defined with Poetry"""
 
     def __init__(self, path: Path, logger: logging.Logger = logging):
         """
@@ -24,15 +24,7 @@ class PoetryROSPackage:
         self.pyproject_file = path / "pyproject.toml"
         if not self.pyproject_file.is_file():
             # Poetry requires a pyproject.toml to function
-            raise NotAPoetryROSPackage()
-
-        if not (path / "package.xml").is_file():
-            logger.info(
-                f"Ignoring pyproject.toml in {path} because the directory does "
-                f"not have a package.xml file. This suggests that it is not a ROS "
-                f"package."
-            )
-            raise NotAPoetryROSPackage()
+            raise NotAPoetryPackage()
 
         try:
             self.pyproject = toml.loads(self.pyproject_file.read_text())
@@ -47,7 +39,7 @@ class PoetryROSPackage:
                 f"section. The file is likely there to instruct a tool other than "
                 f"Poetry."
             )
-            raise NotAPoetryROSPackage()
+            raise NotAPoetryPackage()
 
         logger.info(f"Project {path} appears to be a Poetry ROS project")
 

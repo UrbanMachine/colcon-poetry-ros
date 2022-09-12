@@ -7,8 +7,8 @@ import logging
 from tempfile import NamedTemporaryFile
 
 from colcon_poetry_ros.package_identification.poetry import (
-    PoetryROSPackage,
-    NotAPoetryROSPackage,
+    PoetryPackage,
+    NotAPoetryPackage,
 )
 
 
@@ -33,8 +33,8 @@ def main():
     logging.info("\nDependencies installed!")
 
 
-def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
-    projects: List[PoetryROSPackage] = []
+def _discover_packages(base_paths: List[Path]) -> List[PoetryPackage]:
+    projects: List[PoetryPackage] = []
 
     potential_packages = []
     for path in base_paths:
@@ -43,8 +43,8 @@ def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
     for path in potential_packages:
         if path.is_dir():
             try:
-                project = PoetryROSPackage(path)
-            except NotAPoetryROSPackage:
+                project = PoetryPackage(path)
+            except NotAPoetryPackage:
                 continue
             else:
                 projects.append(project)
@@ -60,7 +60,7 @@ def _discover_packages(base_paths: List[Path]) -> List[PoetryROSPackage]:
 
 
 def _install_dependencies_via_poetry_bundle(
-    project: PoetryROSPackage, install_base: Path, merge_install: bool
+    project: PoetryPackage, install_base: Path, merge_install: bool
 ) -> None:
     try:
         subprocess.run(
@@ -88,7 +88,7 @@ def _install_dependencies_via_poetry_bundle(
 
 
 def _install_dependencies_via_pip(
-    project: PoetryROSPackage, install_base: Path, merge_install: bool
+    project: PoetryPackage, install_base: Path, merge_install: bool
 ) -> None:
     with NamedTemporaryFile("w") as requirements_file:
         requirements_data = project.get_requirements_txt([])
@@ -127,7 +127,7 @@ def _install_dependencies_via_pip(
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Searches for ROS Poetry packages and installs their dependencies "
+        description="Searches for Poetry packages and installs their dependencies "
         "to a configurable install base"
     )
 
