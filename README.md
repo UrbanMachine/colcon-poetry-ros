@@ -88,7 +88,7 @@ The format is intended to be mostly identical to the `data_files` field used
 by [setuptools][setuptools-data-files]. The main differences are that copying
 entire directories is supported, and globbing is not yet implemented.
 
-All ROS projects must have, at minimum, these entries in the
+All ROS packages must have, at minimum, these entries in the
 `tool.colcon-poetry-ros.data-files` section (with `{package_name}` replaced
 with the name of your package):
 
@@ -105,16 +105,16 @@ file to the installation.
 
 ## Installing Dependencies
 
-Poetry dependencies are not installed as part of the node build process, but
-they can be installed using a separate tool that's included in this package.
+Poetry dependencies are not installed as part of the build process, but they
+can be installed using a separate tool that's included in this package.
 
 ```bash
 python3 -m colcon_poetry_ros.dependencies.install --base-paths <path to your nodes>
 ```
 
-This command installs each node's dependencies to Colcon's base install
-directory. This means that your dependencies live alongside your node's code
-after it's built, isolated from the rest of your system.
+This command installs each package's dependencies to Colcon's base install
+directory. This means that your dependencies live alongside your package's
+code after it's built, isolated from the rest of your system.
 
 If you customize `colcon build` with the `--install-base` or `--merge-install`
 flags, make sure to provide those to this tool as well.
