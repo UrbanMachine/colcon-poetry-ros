@@ -205,10 +205,7 @@ class PoetryBuildTask(TaskExtensionPoint):
 
             for source in sources:
                 source_path = pkg.path / Path(source)
-                if source_path.is_dir():
-                    shutil.copytree(str(source_path), str(dest_path / source_path.name))
-                else:
-                    shutil.copy2(str(source_path), str(dest_path))
+                _copy_path(source_path, dest_path)
 
                 resulting_file = dest_path / source_path.name
                 if resulting_file == package_index_path:
@@ -231,6 +228,30 @@ class PoetryBuildTask(TaskExtensionPoint):
             return 1
 
         return 0
+
+
+def _copy_path(src: Path, dest: Path) -> None:
+    """Copies a file or directory to a destination"""
+    if src.is_dir():
+        # The provided destination is interpreted as a parent directory when copying
+        # directories
+        dest_dir = dest / src.name
+        # shutil.copytree can not completely overwrite a directory, so we need to delete
+        # the existing one in advance
+        if dest_dir.exists():
+            _delete_path(dest_dir)
+
+        shutil.copytree(str(src), str(dest_dir))
+    else:
+        shutil.copy2(str(src), str(dest))
+
+
+def _delete_path(path: Path) -> None:
+    """Deletes a file or directory"""
+    if path.is_file():
+        path.unlink()
+    elif path.is_dir():
+        shutil.rmtree(str(path))
 
 
 _DATA_FILES_TABLE = "[tool.colcon-poetry-ros.data-files]"
