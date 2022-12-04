@@ -123,8 +123,11 @@ class PoetryPackage:
 
         for dependency_str in result.stdout.splitlines():
             components = dependency_str.split()
-            if len(components) < 2:
-                raise RuntimeError(f"Invalid dependency format: {dependency_str}")
+            if len(components) != 2:
+                raise RuntimeError(
+                    f"Invalid dependency format '{dependency_str}'. Expected "
+                    "'<name>:<version>'."
+                )
 
             name, version = components
             dependencies.add(f"{name}=={version}")
