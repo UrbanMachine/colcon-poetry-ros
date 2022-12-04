@@ -21,7 +21,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
         )
 
     def identify(self, desc: PackageDescriptor):
-        if desc.type is not None and desc.type != "poetry":
+        if desc.type is not None and desc.type != "poetry.python":
             # Some other identifier claimed this package
             return
 
