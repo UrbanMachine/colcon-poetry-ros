@@ -1,3 +1,4 @@
+import re
 import subprocess
 from pathlib import Path
 import logging
@@ -5,14 +6,20 @@ from tempfile import NamedTemporaryFile
 from typing import List, Set
 
 import toml
+from packaging.version import VERSION_PATTERN
+
+PACKAGE_NAME_PATTERN = r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$"
+"""Matches on valid package names when run with re.IGNORECASE.
+Pulled from: https://peps.python.org/pep-0508/#names
+"""
 
 
-class NotAPoetryROSPackage(Exception):
-    """The given directory does not point to a ROS Poetry project"""
+class NotAPoetryPackage(Exception):
+    """The given directory does not point to a Poetry project"""
 
 
-class PoetryROSPackage:
-    """Contains information on a ROS package defined with Poetry"""
+class PoetryPackage:
+    """Contains information on a package defined with Poetry"""
 
     def __init__(self, path: Path, logger: logging.Logger = logging):
         """
@@ -20,19 +27,12 @@ class PoetryROSPackage:
         :param logger: A logger to log with!
         """
         self.path = path
+        self.logger = logger
 
         self.pyproject_file = path / "pyproject.toml"
         if not self.pyproject_file.is_file():
             # Poetry requires a pyproject.toml to function
-            raise NotAPoetryROSPackage()
-
-        if not (path / "package.xml").is_file():
-            logger.info(
-                f"Ignoring pyproject.toml in {path} because the directory does "
-                f"not have a package.xml file. This suggests that it is not a ROS "
-                f"package."
-            )
-            raise NotAPoetryROSPackage()
+            raise NotAPoetryPackage()
 
         try:
             self.pyproject = toml.loads(self.pyproject_file.read_text())
@@ -47,7 +47,7 @@ class PoetryROSPackage:
                 f"section. The file is likely there to instruct a tool other than "
                 f"Poetry."
             )
-            raise NotAPoetryROSPackage()
+            raise NotAPoetryPackage()
 
         logger.info(f"Project {path} appears to be a Poetry ROS project")
 
@@ -129,12 +129,45 @@ class PoetryROSPackage:
 
         dependencies = set()
 
-        for dependency_str in result.stdout.splitlines():
-            components = dependency_str.split()
-            if len(components) < 2:
-                raise RuntimeError(f"Invalid dependency format: {dependency_str}")
-
-            name, version = components
-            dependencies.add(f"{name}=={version}")
+        for line in result.stdout.splitlines():
+            try:
+                dependency = self._parse_dependency_line(line)
+            except ValueError as ex:
+                self.logger.warning(str(ex))
+            else:
+                dependencies.add(dependency)
 
         return dependencies
+
+    def _parse_dependency_line(self, line: str) -> str:
+        """Makes a best-effort attempt to parse lines from ``poetry show`` as
+        dependencies. Poetry does not have a stable CLI interface, so this logic may
+        not be sufficient now or in the future. A smarter approach is needed.
+
+        :param line: A raw line from ``poetry show``
+        :return: A dependency string in PEP440 format
+        """
+
+        components = line.split()
+        if len(components) < 2:
+            raise ValueError(f"Could not parse line '{line}' as a dependency")
+
+        name = components[0]
+        if re.match(PACKAGE_NAME_PATTERN, name, re.IGNORECASE) is None:
+            raise ValueError(f"Invalid dependency name '{name}'")
+
+        version = None
+
+        # Search for an item that looks like a version. Poetry adds other data in front
+        # of the version number under certain circumstances.
+        for item in components[1:]:
+            if re.match(VERSION_PATTERN, item, re.VERBOSE | re.IGNORECASE) is not None:
+                version = item
+
+        if version is None:
+            raise ValueError(
+                f"For dependency '{name}': Could not find version specification "
+                f"in '{line}'"
+            )
+
+        return f"{name}=={version}"

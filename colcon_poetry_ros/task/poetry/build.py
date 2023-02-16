@@ -176,24 +176,6 @@ class PoetryBuildTask(TaskExtensionPoint):
             logger.error(f"{_DATA_FILES_TABLE} must be a table")
             return 1
 
-        includes_package_index = False
-        includes_package_manifest = False
-
-        package_index_path = (
-            Path(args.install_base)
-            / "share"
-            / "ament_index"
-            / "resource_index"
-            / "packages"
-            / pkg.name
-        )
-        package_manifest_path = (
-            Path(args.install_base)
-            / "share"
-            / pkg.name
-            / "package.xml"
-        )
-
         for destination, sources in data_files.items():
             if not isinstance(sources, list):
                 logger.error(
@@ -206,26 +188,6 @@ class PoetryBuildTask(TaskExtensionPoint):
             for source in sources:
                 source_path = pkg.path / Path(source)
                 _copy_path(source_path, dest_path)
-
-                resulting_file = dest_path / source_path.name
-                if resulting_file == package_index_path:
-                    includes_package_index = True
-                elif resulting_file == package_manifest_path:
-                    includes_package_manifest = True
-
-        if not includes_package_index:
-            logger.error(
-                f"Packages must provide a marker in the package index as a data file. "
-                f"Add a data file at {package_index_path} with '{pkg.name}' as its "
-                f"content."
-            )
-            return 1
-        if not includes_package_manifest:
-            logger.error(
-                f"Packages must provide the package manifest as a data file. Add your "
-                f"package.xml as a data path at {package_manifest_path}."
-            )
-            return 1
 
         return 0
 
