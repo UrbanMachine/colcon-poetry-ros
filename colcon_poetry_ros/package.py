@@ -20,6 +20,7 @@ class PoetryPackage:
         :param logger: A logger to log with!
         """
         self.path = path
+        self.logger = logger
 
         self.pyproject_file = path / "pyproject.toml"
         if not self.pyproject_file.is_file():
@@ -123,13 +124,12 @@ class PoetryPackage:
 
         for dependency_str in result.stdout.splitlines():
             components = dependency_str.split()
-            if len(components) != 2:
-                raise RuntimeError(
-                    f"Invalid dependency format '{dependency_str}'. Expected "
-                    "'<name>:<version>'."
+            if len(components) < 2:
+                self.logger.warning(
+                    f"Could not parse line '{dependency_str}' as a dependency"
                 )
-
-            name, version = components
-            dependencies.add(f"{name}=={version}")
+            else:
+                name, version = components
+                dependencies.add(f"{name}=={version}")
 
         return dependencies
