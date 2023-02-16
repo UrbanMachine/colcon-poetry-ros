@@ -129,7 +129,7 @@ class PoetryPackage:
                     f"Could not parse line '{dependency_str}' as a dependency"
                 )
             else:
-                name, version = components
+                name, version = components[:2]
                 dependencies.add(f"{name}=={version}")
 
         return dependencies
