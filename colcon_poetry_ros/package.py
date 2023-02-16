@@ -5,7 +5,6 @@ from tempfile import NamedTemporaryFile
 from typing import List, Set
 
 import toml
-from poetry.factory import Factory
 
 
 class NotAPoetryPackage(Exception):
@@ -109,14 +108,28 @@ class PoetryPackage:
         :param extras: Names of extras whose dependencies should be included
         :return: A list of dependencies in PEP440 format
         """
-        poetry = Factory().create_poetry(cwd=self.path)
-        packages = poetry.locker.locked_repository().packages
-        for package in packages:
-            print(f"{package.name}: {package.version}")
+        try:
+            result = subprocess.run(
+                ["poetry", "show", "--no-interaction"],
+                cwd=self.path,
+                check=True,
+                stdout=subprocess.PIPE,
+                encoding="utf-8",
+            )
+        except subprocess.CalledProcessError as ex:
+            raise RuntimeError(f"Failed to read package dependencies: {ex}")
 
         dependencies = set()
 
-        for package in packages:
-            dependencies.add(f"{package.name}=={package.version}")
+        for dependency_str in result.stdout.splitlines():
+            components = dependency_str.split()
+            if len(components) != 2:
+                raise RuntimeError(
+                    f"Invalid dependency format '{dependency_str}'. Expected "
+                    "'<name>:<version>'."
+                )
+
+            name, version = components
+            dependencies.add(f"{name}=={version}")
 
         return dependencies
