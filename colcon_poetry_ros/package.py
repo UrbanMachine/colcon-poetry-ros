@@ -1,3 +1,4 @@
+import re
 import subprocess
 from pathlib import Path
 import logging
@@ -5,6 +6,12 @@ from tempfile import NamedTemporaryFile
 from typing import List, Set
 
 import toml
+from packaging.version import VERSION_PATTERN
+
+PACKAGE_NAME_PATTERN = r"^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*[A-Z0-9])$"
+"""Matches on valid package names when run with re.IGNORECASE.
+Pulled from: https://peps.python.org/pep-0508/#names
+"""
 
 
 class NotAPoetryPackage(Exception):
@@ -122,14 +129,33 @@ class PoetryPackage:
 
         dependencies = set()
 
-        for dependency_str in result.stdout.splitlines():
-            components = dependency_str.split()
-            if len(components) < 2:
-                self.logger.warning(
-                    f"Could not parse line '{dependency_str}' as a dependency"
-                )
+        for line in result.stdout.splitlines():
+            try:
+                dependency = self._parse_dependency_line(line)
+            except ValueError as ex:
+                self.logger.warning(str(ex))
             else:
-                name, version = components[:2]
-                dependencies.add(f"{name}=={version}")
+                dependencies.add(dependency)
 
         return dependencies
+
+    def _parse_dependency_line(self, line: str) -> str:
+        """Makes a best-effort attempt to parse lines from ``poetry show`` as
+        dependencies. Poetry does not have a stable CLI interface, so this logic may
+        not be sufficient now or in the future. A smarter approach is needed.
+
+        :param line: A raw line from ``poetry show``
+        :return: A dependency string in PEP440 format
+        """
+
+        components = line.split()
+        if len(components) < 2:
+            raise ValueError(f"Could not parse line '{line}' as a dependency")
+
+        name, version = components[:2]
+        if re.match(PACKAGE_NAME_PATTERN, name, re.IGNORECASE) is None:
+            raise ValueError(f"Invalid dependency name '{name}'")
+        if re.match(VERSION_PATTERN, version, re.VERBOSE | re.IGNORECASE) is None:
+            raise ValueError(f"For dependency '{name}': invalid version {version}")
+
+        return f"{name}=={version}"
