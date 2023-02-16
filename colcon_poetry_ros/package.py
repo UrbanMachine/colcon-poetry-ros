@@ -152,10 +152,22 @@ class PoetryPackage:
         if len(components) < 2:
             raise ValueError(f"Could not parse line '{line}' as a dependency")
 
-        name, version = components[:2]
+        name = components[0]
         if re.match(PACKAGE_NAME_PATTERN, name, re.IGNORECASE) is None:
             raise ValueError(f"Invalid dependency name '{name}'")
-        if re.match(VERSION_PATTERN, version, re.VERBOSE | re.IGNORECASE) is None:
-            raise ValueError(f"For dependency '{name}': invalid version {version}")
+
+        version = None
+
+        # Search for an item that looks like a version. Poetry adds other data in front
+        # of the version number under certain circumstances.
+        for item in components[1:]:
+            if re.match(VERSION_PATTERN, item, re.VERBOSE | re.IGNORECASE) is not None:
+                version = item
+
+        if version is None:
+            raise ValueError(
+                f"For dependency '{name}': Could not find version specification "
+                f"in '{line}'"
+            )
 
         return f"{name}=={version}"
