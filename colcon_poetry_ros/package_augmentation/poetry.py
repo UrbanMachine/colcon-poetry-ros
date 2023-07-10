@@ -14,7 +14,7 @@ from colcon_poetry_ros.package_identification.poetry import PoetryPackage
 class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
     """Augment Python packages that use Poetry by referencing the pyproject.toml file"""
 
-    _PACKAGE_SECTION = "colcon-package"
+    _PACKAGE_SECTION = "tool.colcon-poetry-ros.dependencies"
     _DEPEND_LIST = "depend"
     _BUILD_DEPEND_LIST = "build_depend"
     _EXEC_DEPEND_LIST = "exec_depend"
