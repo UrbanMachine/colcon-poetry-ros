@@ -121,40 +121,15 @@ flags, make sure to provide those to this tool as well.
 
 ## Communicating Dependencies to Colcon
 
-Colcon expects extensions to report their dependencies as dependency
-descriptors so that they can be shown in tools like `colcon graph`. The
-following sections describe how each dependency type is sourced from your
-`pyproject.toml`.
+Colcon can be given information on dependencies between packages, which
+affects build order and can be displayed in tools like `colcon graph`. These
+dependencies can be explicitly defined in the `pyproject.toml` under a custom
+section called `tool.colcon-poetry-ros.dependencies`.
 
-### Build Dependencies
-
-This extension uses the `requires` field in the `build-system` table to source
-build dependencies. See [the section in PEP 518][build-system-requires] for
-details. This section might only be needed if you're using a compiler like
-Cython that runs during package installation. Since these packages are not
-locked by Poetry, the version specifications in the `requires` field will be
-used as-is.
-
-### Runtime Dependencies
-
-Runtime dependencies are pulled from the `tool.poetry.dependencies` table. See
-[Poetry's documentation][tool-poetry-dependencies] for details. Dependency
-versions are defined by the `poetry.lock` file.
-
-You can include extras by setting the
-`POETRY_RUN_DEPENDS_EXTRAS` environment variable. Multiple extras can be
-provided and are separated by commas. By default, no extras are included.
-
-### Test Dependencies
-
-Poetry currently has no official way of defining test dependencies, so test
-dependencies are instead expected to be in an extra called "test". Dependency
-versions are defined by the `poetry.lock` file.
-
-You can change which extras are used for test dependencies by setting the
-`POETRY_TEST_DEPENDS_EXTRAS` environment variable. Multiple extras can be
-provided and are separated by commas. As mentioned above, this value is set to
-"test" by default.
-
-[build-system-requires]: https://www.python.org/dev/peps/pep-0518/#build-system-table
-[tool-poetry-dependencies]: https://python-poetry.org/docs/pyproject/#dependencies-and-dev-dependencies
+```toml
+[tool.colcon-poetry-ros.dependencies]
+depend = ["foo_package"]   # This will add to both `build_depend` and `exec_depend` following `package.xml` standards
+build_depend = ["bar_package"]
+exec_depend = ["baz_package"]
+test_depend = ["qux_package"]
+```
