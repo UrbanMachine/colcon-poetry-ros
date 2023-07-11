@@ -14,7 +14,9 @@ from colcon_poetry_ros.package_identification.poetry import PoetryPackage
 class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
     """Augment Python packages that use Poetry by referencing the pyproject.toml file"""
 
-    _PACKAGE_SECTION = "tool.colcon-poetry-ros.dependencies"
+    _TOOL_SECTION = "tool"
+    _COLCON_POETRY_ROS_SECTION = "colcon-poetry-ros"
+    _DEPENDENCIES_SECTION = "dependencies"
     _DEPEND_LIST = "depend"
     _BUILD_DEPEND_LIST = "build_depend"
     _EXEC_DEPEND_LIST = "exec_depend"
@@ -48,25 +50,30 @@ class PoetryPackageAugmentation(PackageAugmentationExtensionPoint):
         pyproject_toml = desc.path / "pyproject.toml"
         pyproject = toml.loads(pyproject_toml.read_text())
 
+        if not(self._TOOL_SECTION in pyproject and
+               self._COLCON_POETRY_ROS_SECTION in pyproject[self._TOOL_SECTION] and
+               self._DEPENDENCIES_SECTION in pyproject[self._TOOL_SECTION][self._COLCON_POETRY_ROS_SECTION]):
+            return
+        colcon_deps = pyproject[self._TOOL_SECTION][self._COLCON_POETRY_ROS_SECTION][self._DEPENDENCIES_SECTION]
         # Parses dependencies to other colcon packages indicated in the pyproject.toml file.
-        if self._PACKAGE_SECTION in pyproject and self._BUILD_DEPEND_LIST in pyproject[self._PACKAGE_SECTION]:
-            build_depend = set(pyproject[self._PACKAGE_SECTION][self._BUILD_DEPEND_LIST])
+        if self._BUILD_DEPEND_LIST in colcon_deps:
+            build_depend = set(colcon_deps[self._BUILD_DEPEND_LIST])
         else:
             build_depend = set()
 
-        if self._PACKAGE_SECTION in pyproject and self._EXEC_DEPEND_LIST in pyproject[self._PACKAGE_SECTION]:
-            exec_depend = set(pyproject[self._PACKAGE_SECTION][self._EXEC_DEPEND_LIST])
+        if self._EXEC_DEPEND_LIST in colcon_deps:
+            exec_depend = set(colcon_deps[self._EXEC_DEPEND_LIST])
         else:
             exec_depend = set()
 
-        if self._PACKAGE_SECTION in pyproject and self._TEST_DEPEND_LIST in pyproject[self._PACKAGE_SECTION]:
-            test_depend = set(pyproject[self._PACKAGE_SECTION][self._TEST_DEPEND_LIST])
+        if self._TEST_DEPEND_LIST in colcon_deps:
+            test_depend = set(colcon_deps[self._TEST_DEPEND_LIST])
         else:
             test_depend = set()
 
         # Depend add the deps to the build and exec depends
-        if self._PACKAGE_SECTION in pyproject and self._DEPEND_LIST in pyproject[self._PACKAGE_SECTION]:
-            depends = pyproject[self._PACKAGE_SECTION][self._DEPEND_LIST]
+        if self._DEPEND_LIST in colcon_deps:
+            depends = colcon_deps[self._DEPEND_LIST]
             build_depend.update(depends)
             exec_depend.update(depends)
 
