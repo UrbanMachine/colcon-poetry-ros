@@ -87,6 +87,32 @@ def _install_dependencies(
         cwd=project.path
     )
 
+    _enable_system_site_packages(install_base)
+
+
+def _enable_system_site_packages(install_base: Path) -> None:
+    """Enables system site packages for a virtual environment. This allows system
+    packages to be imported from within the virtual environment, which is necessary
+    since ROS depends on some Python packages supplied by APT.
+
+    Based on this: https://stackoverflow.com/a/40972692/2159348
+
+    :param install_base: The location of the virtual environment
+    """
+    pyvenv_config_file = install_base / "pyvenv.cfg"
+
+    # Even though the pyvenv.cfg file looks like a ConfigParser-style ini file, it's not
+    # because it's missing sections, so we're stuck doing string manipulation instead
+    old_config = pyvenv_config_file.read_text()
+    new_config = ""
+    for line in old_config.splitlines():
+        if line.startswith("include-system-site-packages"):
+            new_config += "include-system-site-packages = true\n"
+        else:
+            new_config += f"{line}\n"
+
+    pyvenv_config_file.write_text(new_config)
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
