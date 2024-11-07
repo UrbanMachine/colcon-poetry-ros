@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "my_package"
+version = "1.0.0"
+description = "An example package that uses colcon-poetry-ros"
+authors = ["Urban Machine <info@urbanmachine.build>"]
+license = "BSD-3-Clause"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+cowsay = "^6.1"
+[tool.poetry.scripts]
+cowsayer = "my_package.node:main"
+
+[tool.colcon-poetry-ros.data-files]
+"share/ament_index/resource_index/packages" = ["resource/my_package"]
+"share/my_package" = ["package.xml"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
