@@ -43,11 +43,12 @@ class PoetryBuildTask(TaskExtensionPoint):
             logger.error(str(e))
             return 1
 
-        # TODO: Remove this hack when Poetry can install to a target directory
-        #       See https://github.com/python-poetry/poetry/issues/1937
-        # Unfortunately, Poetry does not support installing to a target directory, so
-        # instead we build the package as a wheel, then use Pip to install the wheel
-        # to a target directory.
+        # In this step, we want to install the ROS package's source without touching
+        # its dependencies, because those are managed by
+        # colcon_poetry_ros.dependencies.install. Poetry (even with bundle) doesn't have
+        # a way to re-install only the source code to a target directory, so instead we
+        # export the project as a wheel and use Pip to install the source instead.
+        # Related: https://github.com/python-poetry/poetry-plugin-bundle/issues/87
         completed = await run(
             self.context,
             ["poetry", "build", "--format", "wheel"],
@@ -82,11 +83,21 @@ class PoetryBuildTask(TaskExtensionPoint):
             extras_str = f"[{extras_str}]"
             wheel_name += extras_str
 
+        venv_python_executable = Path(args.install_base) / "bin/python"
+        if not venv_python_executable.exists():
+            logger.error(
+                f"No virtual environment exists in {args.install_base}. Have "
+                f"dependencies not been installed yet?"
+            )
+            return 1
+
         # Install Poetry's generated wheel
         completed = await run(
             self.context,
             [
-                "pip3",
+                str(venv_python_executable),
+                "-m",
+                "pip",
                 "install",
                 wheel_name,
                 # pip will skip installation if the package version is the same
@@ -98,8 +109,6 @@ class PoetryBuildTask(TaskExtensionPoint):
                 # doesn't know that.
                 "--no-warn-script-location",
                 "--no-deps",
-                "--prefix",
-                args.install_base,
             ],
             cwd=args.path,
             env=env,
@@ -123,7 +132,6 @@ class PoetryBuildTask(TaskExtensionPoint):
 
             for script in script_files:
                 shutil.copy2(str(script), str(ros_script_dir))
-            shutil.rmtree(str(poetry_script_dir))
         else:
             logger.warning(
                 "Poetry did not install any scripts. Are you missing a "

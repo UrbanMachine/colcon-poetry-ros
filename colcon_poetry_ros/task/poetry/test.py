@@ -24,7 +24,7 @@ class PoetryTestTask(TaskExtensionPoint):
         # Force PythonTestTask to use PyTest, since the alternative is setup.py-based
         # testing
         # TODO: Is this true? It seems like the so-called "setup.py" test task just
-        #       invokes unittest, which should work file.
+        #       invokes unittest, which should work fine.
         self.context.args.python_testing = "pytest"
 
         extension = PythonTestTask()

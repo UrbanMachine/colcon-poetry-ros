@@ -4,11 +4,10 @@ import sys
 from typing import List
 import subprocess
 import logging
-from tempfile import NamedTemporaryFile
 
 from colcon_poetry_ros.package_identification.poetry import (
     PoetryPackage,
-    NotAPoetryPackage,
+    NotAPoetryPackageError,
 )
 
 
@@ -18,17 +17,9 @@ def main():
 
     for project in _discover_packages(args.base_paths):
         logging.info(f"Installing dependencies for {project.path.name}...")
-        if args.method == "pip":
-            _install_dependencies_via_pip(
-                project, args.install_base, args.merge_install
-            )
-        elif args.method == "bundle":
-            _install_dependencies_via_poetry_bundle(
-                project, args.install_base, args.merge_install
-            )
-        else:
-            logging.error(f"Invalid method argument: '{args.method}'")
-            sys.exit(1)
+        _install_dependencies(
+            project, args.install_base, args.merge_install
+        )
 
     logging.info("\nDependencies installed!")
 
@@ -44,7 +35,7 @@ def _discover_packages(base_paths: List[Path]) -> List[PoetryPackage]:
         if path.is_dir():
             try:
                 project = PoetryPackage(path)
-            except NotAPoetryPackage:
+            except NotAPoetryPackageError:
                 continue
             else:
                 projects.append(project)
@@ -59,9 +50,13 @@ def _discover_packages(base_paths: List[Path]) -> List[PoetryPackage]:
     return projects
 
 
-def _install_dependencies_via_poetry_bundle(
+def _install_dependencies(
     project: PoetryPackage, install_base: Path, merge_install: bool
 ) -> None:
+    """Uses poetry-bundle-plugin to create a virtual environment with all the project's
+    dependencies in Colcon's install directory. We need to use the bundle plugin because
+    Poetry does not natively let us install projects to a custom location.
+    """
     try:
         subprocess.run(
             ["poetry", "bundle", "venv", "--help"],
@@ -69,7 +64,7 @@ def _install_dependencies_via_poetry_bundle(
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-    except subprocess.CalledProcessError as ex:
+    except subprocess.CalledProcessError:
         logging.error(
             "The Poetry bundle plugin does not appear to be installed! See the "
             "project page for installation instructions: "
@@ -81,66 +76,48 @@ def _install_dependencies_via_poetry_bundle(
         install_base /= project.name
 
     subprocess.run(
-        ["poetry", "bundle", "venv", str(install_base.absolute())],
+        [
+            "poetry",
+            "bundle",
+            "venv",
+            "--no-interaction",
+            str(install_base.absolute()),
+        ],
         check=True,
         cwd=project.path
     )
 
+    _enable_system_site_packages(install_base)
 
-def _install_dependencies_via_pip(
-    project: PoetryPackage, install_base: Path, merge_install: bool
-) -> None:
-    with NamedTemporaryFile("w") as requirements_file:
-        requirements_data = project.get_requirements_txt([])
-        requirements_file.write(requirements_data)
-        requirements_file.flush()
 
-        if not merge_install:
-            install_base /= project.name
+def _enable_system_site_packages(install_base: Path) -> None:
+    """Enables system site packages for a virtual environment. This allows system
+    packages to be imported from within the virtual environment, which is necessary
+    since ROS depends on some Python packages supplied by APT.
 
-        subprocess.run(
-            [
-                "python3",
-                "-m",
-                "pip",
-                "install",
-                # I don't understand why, but providing this fixes:
-                # https://github.com/pypa/pip/issues/9644
-                # Despite what the name would imply, dependencies are still
-                # installed
-                "--no-deps",
-                # Forces installation even if the package is installed at the
-                # system level
-                "--ignore-installed",
-                # Turns off Pip's check to ensure installed binaries are in the
-                # PATH. ROS workspaces take care of setting the PATH, but Pip
-                # doesn't know that.
-                "--no-warn-script-location",
-                "--requirement",
-                requirements_file.name,
-                "--prefix",
-                install_base,
-            ],
-            check=True,
-        )
+    Based on this: https://stackoverflow.com/a/40972692/2159348
+
+    :param install_base: The location of the virtual environment
+    """
+    pyvenv_config_file = install_base / "pyvenv.cfg"
+
+    # Even though the pyvenv.cfg file looks like a ConfigParser-style ini file, it's not
+    # because it's missing sections, so we're stuck doing string manipulation instead
+    old_config = pyvenv_config_file.read_text()
+    new_config = ""
+    for line in old_config.splitlines():
+        if line.startswith("include-system-site-packages"):
+            new_config += "include-system-site-packages = true\n"
+        else:
+            new_config += f"{line}\n"
+
+    pyvenv_config_file.write_text(new_config)
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Searches for Poetry packages and installs their dependencies "
         "to a configurable install base"
-    )
-
-    parser.add_argument(
-        "--method",
-        type=str,
-        default="pip",
-        help="The method to use when installing dependencies. The 'pip' option exports "
-        "Poetry dependencies to a requirements.txt and installs them using the `pip` "
-        "command. This is the default option. The 'bundle' option uses the Poetry "
-        "Bundle plugin to install dependencies. This is the preferred option, but "
-        "using it requires Poetry 1.2.0 or higher and the Bundle plugin to be "
-        "installed."
     )
 
     parser.add_argument(

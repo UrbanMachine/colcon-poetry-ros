@@ -14,7 +14,7 @@ Pulled from: https://peps.python.org/pep-0508/#names
 """
 
 
-class NotAPoetryPackage(Exception):
+class NotAPoetryPackageError(Exception):
     """The given directory does not point to a Poetry project"""
 
 
@@ -32,7 +32,7 @@ class PoetryPackage:
         self.pyproject_file = path / "pyproject.toml"
         if not self.pyproject_file.is_file():
             # Poetry requires a pyproject.toml to function
-            raise NotAPoetryPackage()
+            raise NotAPoetryPackageError()
 
         try:
             self.pyproject = toml.loads(self.pyproject_file.read_text())
@@ -47,7 +47,7 @@ class PoetryPackage:
                 f"section. The file is likely there to instruct a tool other than "
                 f"Poetry."
             )
-            raise NotAPoetryPackage()
+            raise NotAPoetryPackageError()
 
         logger.info(f"Project {path} appears to be a Poetry ROS project")
 

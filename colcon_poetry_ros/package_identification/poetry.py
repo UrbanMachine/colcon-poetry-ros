@@ -2,7 +2,7 @@ from colcon_core.package_descriptor import PackageDescriptor
 from colcon_core.package_identification import PackageIdentificationExtensionPoint, logger
 from colcon_core.plugin_system import satisfies_version
 
-from colcon_poetry_ros.package import PoetryPackage, NotAPoetryPackage
+from colcon_poetry_ros.package import PoetryPackage, NotAPoetryPackageError
 
 
 class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
@@ -10,7 +10,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
     """
 
     # The priority needs to be higher than RosPackageIdentification and the built-in
-    # Python identification. This identifier supercedes both.
+    # Python identification. This identifier supersedes both.
     PRIORITY = 200
 
     def __init__(self):
@@ -27,7 +27,7 @@ class PoetryPackageIdentification(PackageIdentificationExtensionPoint):
 
         try:
             project = PoetryPackage(desc.path, logger)
-        except NotAPoetryPackage:
+        except NotAPoetryPackageError:
             return
 
         if desc.name is not None and desc.name != project.name:

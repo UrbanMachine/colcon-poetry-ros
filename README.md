@@ -5,8 +5,8 @@ packages that use [Poetry][poetry] within ROS. This extension is a replacement
 for Colcon's built-in `setup.cfg` based Python support and the Python-related
 bits in [colcon-ros][colcon-ros].
 
-We use this extension with Foxy and Humble, but other versions should work as
-well. Please create an issue if you see problems!
+We use this extension with Humble, but other versions should work as well.
+Please create an issue if you see problems!
 
 [colcon-core]: https://github.com/colcon/colcon-core
 [poetry]: https://python-poetry.org/
@@ -14,45 +14,55 @@ well. Please create an issue if you see problems!
 
 ## Getting Started
 
-Start by install this extension with Pip:
+1. [Install Poetry][installing poetry] and the
+   [Poetry Bundle plugin][installing poetry bundle], if you haven't already.
 
-```bash
-pip3 install colcon-poetry-ros
-```
+2. Install this extension with Pip:
 
-Then, add a `pyproject.toml` in the root of your package's directory. Each
-package should have its own `pyproject.toml` file. It should look something
-like this:
+   ```bash
+   pip3 install colcon-poetry-ros
+   ```
 
-```toml
-[tool.poetry]
-name = "my_package"
-version = "0.1.0"
-description = "Does something cool"
-authors = ["John Smith <johnny@urbanmachine.build>"]
-license = "BSD-3-Clause"
+3. Add a `pyproject.toml` in the root of your package's directory. Each
+   package should have its own `pyproject.toml` file. It should look something
+   like this:
 
-[tool.poetry.dependencies]
-python = "^3.8"
+   ```toml
+   [tool.poetry]
+   name = "my_package"
+   version = "0.1.0"
+   description = "Does something cool"
+   authors = ["John Smith <johnny@urbanmachine.build>"]
+   license = "BSD-3-Clause"
 
-[tool.poetry.scripts]
-node_a = "my_package.node_a:main"
-node_b = "my_package.node_b:main"
+   [tool.poetry.dependencies]
+   python = "^3.8"
 
-[tool.colcon-poetry-ros.data-files]
-"share/ament_index/resource_index/packages" = ["resource/my_package"]
-"share/my_package" = ["package.xml"]
+   [tool.poetry.scripts]
+   node_a = "my_package.node_a:main"
+   node_b = "my_package.node_b:main"
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-```
+   [tool.colcon-poetry-ros.data-files]
+   "share/ament_index/resource_index/packages" = ["resource/my_package"]
+   "share/my_package" = ["package.xml"]
 
-Finally, run your build like normal:
+   [build-system]
+   requires = ["poetry-core>=1.0.0"]
+   build-backend = "poetry.core.masonry.api"
+   ```
 
-```bash
-colcon build
-```
+4. Install your packages' Python dependencies using a script included with
+   this plugin:
+
+   ```bash
+   python3 -m colcon_poetry_ros.dependencies.install --base-paths <path to your nodes>
+   ```
+
+5. Finally, run your build like normal:
+
+   ```bash
+   colcon build
+   ```
 
 ## Testing
 
@@ -103,23 +113,29 @@ file to the installation.
 
 [setuptools-data-files]: https://setuptools.pypa.io/en/latest/userguide/datafiles.html
 
-## Installing Dependencies
+## Python Dependency Details
 
-Poetry dependencies are not installed as part of the build process, but they
-can be installed using a separate tool that's included in this package.
+Poetry dependencies are not installed as part of the build process, so they
+must be installed using a separate tool that's included in this package.
 
 ```bash
 python3 -m colcon_poetry_ros.dependencies.install --base-paths <path to your nodes>
 ```
 
-This command installs each package's dependencies to Colcon's base install
-directory. This means that your dependencies live alongside your package's
-code after it's built, isolated from the rest of your system.
+This command creates a virtual environment within Colcon's base install
+directory, then installs each package's dependencies in that virtual
+environment.
 
 If you customize `colcon build` with the `--install-base` or `--merge-install`
 flags, make sure to provide those to this tool as well.
 
-## Communicating Dependencies to Colcon
+We split dependency installation out of `colcon build` to make development
+iterations faster. Third-party dependencies change less frequency than first
+party code, so it's often a waste of time to resolve dependencies on every
+iteration. This is especially elegant in container-based workflows, an example
+of which can be found in the `examples/` directory.
+
+## Communicating Package Dependencies to Colcon
 
 Colcon can be given information on dependencies between packages, which
 affects build order and can be displayed in tools like `colcon graph`. These
